@@ -36,7 +36,7 @@
 - Quality gates are defined (lint/format; tests if required by spec; fail-first
   testing when included).
 - Quality targets captured (automation rate, hallucination rate, format coverage).
-- Output schema defined (question, answer, usage scenario, tags, related terms).
+- Output schema defined (concept, description, application, tags, type, reference).
 - Local-only execution confirmed (Ollama; no external content calls).
 - Reproducibility plan captured (dependency versions, dataset hashes, seeds).
 - Semver impact assessed; breaking changes include migration notes.

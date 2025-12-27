@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KnowledgeUnit",
+  "type": "object",
+  "required": [
+    "concept",
+    "description",
+    "application",
+    "tags",
+    "type",
+    "reference"
+  ],
+  "properties": {
+    "concept": { "type": "string" },
+    "description": { "type": "string" },
+    "application": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "type": { "type": "string" },
+    "reference": { "type": "string" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+  },
+  "additionalProperties": false
+}

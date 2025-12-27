@@ -1,48 +1,49 @@
 # Data Model: Universal Book-to-RAG Pipeline
 
-**Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
-
 ## Entities
 
 ### Book
-
-- **Fields**: id, title, source_path, format, language, ingested_at
-- **Validation**: format MUST be one of PDF/EPUB/TXT/DOCX/MD; source_path MUST exist locally.
-- **Relationships**: has many DocumentChunk; has one Collection.
+- Fields: id, title, source_format, source_path, language, chapter_index
+- Relationships: has many DocumentChunks; has one Collection
+- Validation: source_format in {PDF, EPUB, TXT, DOCX, MD}
 
 ### DocumentChunk
-
-- **Fields**: id, book_id, content, section_path, page_range, char_count, order_index
-- **Validation**: char_count MUST align to ~1000 characters; overlap 100 chars.
-- **Relationships**: belongs to Book; has many KnowledgeUnit.
+- Fields: id, book_id, chapter_title, page_range, paragraph_index, text
+- Relationships: belongs to Book; source for KnowledgeUnit
+- Validation: text length <= 1000 chars; overlap 100 chars
 
 ### KnowledgeUnit
+- Fields: id, book_id, concept, description, application, tags, type, reference
+- Relationships: belongs to Book; has one EmbeddingRecord
+- Validation: required fields present; reference format per spec
 
-- **Fields**: id, chunk_id, concept, description, application, tags, type,
-  reference, confidence
-- **Validation**: content MUST be grounded in chunk content; tags non-empty; reference uses page range (e.g., p12-14).
-- **Relationships**: belongs to DocumentChunk; has one EmbeddingRecord.
+### Reference
+- Fields: book_id, page_range, chapter_title, paragraph_index
+- Relationships: embedded within KnowledgeUnit
+- Validation: page_range required if available; otherwise chapter_title +
+  paragraph_index required
 
 ### EmbeddingRecord
-
-- **Fields**: id, knowledge_unit_id, vector, model_name, model_version, created_at
-- **Validation**: model_name MUST be BGE-M3; vector size MUST match embedding model.
-- **Relationships**: belongs to KnowledgeUnit; belongs to Collection.
+- Fields: id, knowledge_unit_id, vector_id, model_version
+- Relationships: belongs to KnowledgeUnit; stored in Collection
+- Validation: model_version recorded
 
 ### Collection
+- Fields: id, book_id, name, created_at
+- Relationships: has many EmbeddingRecords; belongs to Book
 
-- **Fields**: id, book_id, name, locale, created_at
-- **Validation**: name MUST be unique per book; locale optional.
-- **Relationships**: belongs to Book; has many EmbeddingRecord.
+### FailureReport
+- Fields: id, book_id, stage, error_type, retries, status, sample_reference
+- Relationships: belongs to Book
+- Validation: error_type in {timeout, transient, format, unknown}
+
+### VerificationResult
+- Fields: id, book_id, sample_size, hallucination_rate, failed_samples
+- Relationships: belongs to Book
+- Validation: sample_size fixed per book; hallucination_rate numeric
 
 ## State Transitions
 
-- **Book**: created -> ingested -> processed -> validated -> exported
-- **DocumentChunk**: created -> cleaned -> chunked -> queued -> processed
-- **KnowledgeUnit**: generated -> validated -> indexed
-
-## Validation Rules
-
-- Hallucination sampling MUST keep conflicts < 1% (SC-002).
-- Retrieval hit-rate MUST be >= 80% for validation queries (SC-004).
-- Local-only processing MUST be enforced for all states.
+- Book: ingested -> parsed -> chunked -> synthesized -> embedded -> verified
+- KnowledgeUnit: generated -> validated -> stored
+- FailureReport: recorded -> resolved | unresolved

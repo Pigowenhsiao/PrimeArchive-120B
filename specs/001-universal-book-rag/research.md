@@ -1,64 +1,40 @@
 # Phase 0 Research: Universal Book-to-RAG Pipeline
 
-**Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
-**Plan**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md
+## Best Practices & Decisions
 
-## Research Tasks
+### Local LLM Execution (Ollama)
+- Decision: Run all content processing locally; disable external calls.
+- Rationale: Aligns with privacy constraints and copyright protection.
+- Alternatives considered: Remote LLM APIs (rejected due to privacy).
 
-- Task: "Research Python version for local LLM pipelines"
-- Task: "Find best practices for LangChain orchestration in ETL pipelines"
-- Task: "Find best practices for Unstructured parsing of PDF/EPUB/DOCX/MD/TXT"
-- Task: "Find best practices for ChromaDB collections and metadata"
-- Task: "Find best practices for Ollama local LLM batching and retries"
-- Task: "Find best practices for BGE-M3 embeddings in bilingual corpora"
-- Task: "Research chunk sizing and overlap for QA generation"
-
-## Findings
-
-### Python Runtime
-
-- Decision: Python 3.11
-- Rationale: Mature ecosystem for LangChain/Unstructured, good asyncio support.
-- Alternatives considered: Python 3.10, Python 3.12
-
-### Orchestration
-
-- Decision: LangChain for pipeline orchestration and prompt templates.
-- Rationale: Integrates with local LLMs, structured output helpers, and retriers.
-- Alternatives considered: LlamaIndex, custom pipeline
-
-### Parsing/ETL
-
-- Decision: Unstructured for PDF/EPUB/TXT/DOCX/MD ingestion and cleaning.
-- Rationale: Handles noisy documents and preserves structural hints for chunking.
-- Alternatives considered: pdfminer + ebooklib, tika
+### Multi-format Parsing (Unstructured)
+- Decision: Use format-specific loaders with a unified adapter layer.
+- Rationale: Improves stability across PDF/EPUB/TXT/DOCX/MD.
+- Alternatives considered: Single generic loader (rejected due to quality variance).
 
 ### Chunking Strategy
+- Decision: Header-first chunking with size cap and overlap; preserve section
+  context for references.
+- Rationale: Improves semantic continuity and reference accuracy.
+- Alternatives considered: Fixed-length chunking only (rejected for poor structure).
 
-- Decision: Markdown heading-first chunking with 1000-character limit and 100-char overlap.
-- Rationale: Preserves semantic hierarchy while matching config and prompt context.
-- Alternatives considered: fixed-size chunking, sentence-only chunking
+### Retry & Failure Strategy
+- Decision: Retry only timeouts/transient failures up to a fixed limit; format
+  errors fail fast.
+- Rationale: Minimizes wasted retries while preserving throughput.
+- Alternatives considered: Unbounded retries (rejected as unstable).
 
-### Local LLM Execution
+### Embedding & Vector Storage
+- Decision: Use BGE-M3 embeddings and per-book ChromaDB collections.
+- Rationale: Supports multilingual content and isolates search per book.
+- Alternatives considered: Single global collection (rejected for leakage risk).
 
-- Decision: Ollama local runtime with async batching and retry on timeout.
-- Rationale: Meets local-only privacy constraint and supports 120B model usage.
-- Alternatives considered: remote API hosted models, vLLM local server
+### Output Schema Versioning
+- Decision: JSONL schema version 1.0.0; changes require explicit version bump.
+- Rationale: Downstream compatibility requires stable fields.
+- Alternatives considered: Implicit schema changes (rejected for risk).
 
-### Embeddings & Storage
-
-- Decision: BGE-M3 embeddings with ChromaDB collections per book.
-- Rationale: BGE-M3 supports bilingual corpora; ChromaDB is local and lightweight.
-- Alternatives considered: E5, FAISS, SQLite + custom index
-
-### Output Schema
-
-- Decision: JSONL with fields concept, description, application, tags, type, reference.
-- Rationale: Aligns with Schema.json and prompt template requirements.
-- Alternatives considered: nested JSON per chapter, CSV
-
-### Quality Validation
-
-- Decision: Add retrieval hit-rate script and hallucination sampling checks.
-- Rationale: Directly measures success metrics and fidelity requirements.
-- Alternatives considered: manual QA-only sampling
+### Hallucination Verification
+- Decision: Fixed sample size per book (e.g., 200 records) for validation.
+- Rationale: Predictable cost and consistent auditability.
+- Alternatives considered: Variable sample rates (rejected for inconsistency).

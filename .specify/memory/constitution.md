@@ -1,9 +1,8 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 1.1.0
-- Modified principles: III Explicit Quality Gates (expanded); VII Reproducible
-  Artifacts (renumbered); VIII Safe Change Management (renumbered)
-- Added sections: Project Charter
+- Version change: 1.1.0 -> 2.0.0
+- Modified principles: V Structured Knowledge Output (renamed and field definitions updated)
+- Added sections: none
 - Removed sections: none
 - Templates requiring updates:
   - .specify/templates/plan-template.md ✅ updated
@@ -16,11 +15,12 @@ Sync Impact Report
 ## Project Charter
 
 **Vision**: 建立一個全自動化的數據處理流水線，將非結構化書籍
-（PDF/EPub）轉化為具備高品質問答對與多維標籤的 RAG 專用知識庫。
+（PDF/EPub）轉化為具備高品質知識單元與多維標籤的 RAG 專用知識庫。
 
 **Mission**:
 - **高保真轉換**：利用 120B 模型深度理解文本，確保文法與邏輯無損。
-- **結構化輸出**：自動生成包含問題、答案、應用場景、標籤、關聯詞的 JSON 數據。
+- **結構化輸出**：自動生成包含 concept、description、application、tags、
+  type、reference 的 JSON 數據。
 - **本地化隱私**：基於 Ollama 全本地運行，確保書籍版權與數據隱私。
 
 **Success Metrics**:
@@ -57,9 +57,9 @@ below 1% per success metrics. Sampling or automated checks MUST be defined to
 enforce fidelity. Rationale: the archive is only useful when correctness is
 verifiable.
 
-### V. Structured QA Output
-Outputs MUST be emitted as JSON with fields for question, answer, usage scenario,
-tags, and related terms; schema changes MUST be documented in specs and plans.
+### V. Structured Knowledge Output
+Outputs MUST be emitted as JSON with fields for concept, description, application,
+tags, type, and reference; schema changes MUST be documented in specs and plans.
 Rationale: consistent structure enables downstream indexing and retrieval.
 
 ### VI. Local-Only Privacy
@@ -107,4 +107,4 @@ users.
 - Compliance review is mandatory for specs, plans, and task lists; reviewers MUST
   block work that fails the Constitution Check.
 
-**Version**: 1.1.0 | **Ratified**: TODO(RATIFICATION_DATE): original adoption date unknown | **Last Amended**: 2025-12-27
+**Version**: 2.0.0 | **Ratified**: TODO(RATIFICATION_DATE): original adoption date unknown | **Last Amended**: 2025-12-27

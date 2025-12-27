@@ -1,47 +1,24 @@
 # Quickstart: Universal Book-to-RAG Pipeline
 
-**Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
-
 ## Prerequisites
 
-- Python 3.11
-- Ollama running locally
-- Model available: `gpt-oss:120B-cloud`
+- Local LLM runtime (Ollama) available on the machine
+- Input book file in one of: PDF, EPUB, TXT
 
-## Setup
-
-```bash
-cd /home/pigo/文件/python/PrimeArchive-120B
-python -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-```
-
-## Run Pipeline (Example)
+## Run (CLI)
 
 ```bash
-# Example CLI (to be implemented)
-python -m src.cli.pipeline \
-  --source /home/pigo/資料/books/example.pdf \
-  --format PDF \
-  --output /home/pigo/資料/outputs/example.jsonl
+bookrag run --input /path/to/book.pdf --format pdf --output /path/to/output.jsonl
 ```
 
-## Validate Retrieval
+## Outputs
 
-```bash
-python -m src.cli.validate \
-  --collection example \
-  --report /home/pigo/資料/outputs/example_validation.json
-```
+- JSONL file with knowledge units (see `contracts/schema.json`)
+- Verification report with hallucination rate
+- Failure summary (if any)
 
-## Config & Schema
+## Verification
 
-- Config: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
-- Prompt: /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md
-- Schema: /home/pigo/文件/python/PrimeArchive-120B/schemas/Schema.json
-
-## Expected Outputs
-
-- JSONL with fields: concept, description, application, tags, type, reference
-- Validation report with hit_rate and hallucination_rate
+- Confirm JSONL lines include required fields.
+- Confirm reference format uses page range or chapter+paragraph.
+- Confirm hallucination rate is computed on fixed sample size (200).

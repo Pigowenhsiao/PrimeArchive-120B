@@ -1,0 +1,9 @@
+langchain
+unstructured
+chromadb
+ollama
+pyyaml
+jsonschema
+requests
+pytest
+pypdf

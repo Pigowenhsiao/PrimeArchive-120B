@@ -107,7 +107,7 @@
   schema versioning expectations.
 -->
 
-- **Required Fields**: [question, answer, usage scenario, tags, related terms]
+- **Required Fields**: [concept, description, application, tags, type, reference]
 - **Optional Fields**: [list or "none"]
 - **Schema Version**: [version or "TBD"]
 
