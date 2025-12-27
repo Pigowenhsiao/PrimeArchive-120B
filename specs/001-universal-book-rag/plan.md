@@ -10,13 +10,13 @@
 Build a local-only CLI pipeline that ingests multi-format books, cleans and chunks
 content, generates structured knowledge units with references, validates
 hallucination rate via fixed-size sampling, and exports JSONL plus embeddings in
-ChromaDB.
+ChromaDB, with a local admin UI for job submission and status viewing.
 
 ## Technical Context
 
 **Language/Version**: Python 3.11  
 **Primary Dependencies**: Ollama (local LLM runtime), LangChain, Unstructured,
-ChromaDB, BGE-M3 embedding model  
+ChromaDB, BGE-M3 embedding model, FastAPI, Uvicorn  
 **Storage**: Local files + ChromaDB collections  
 **Testing**: pytest  
 **Target Platform**: Local workstation (Linux/macOS)  

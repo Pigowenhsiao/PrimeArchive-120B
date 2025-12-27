@@ -139,6 +139,19 @@ description: "Task list template for feature implementation"
 
 ---
 
+## Phase 7: Admin UI (Local Control Panel)
+
+**Purpose**: Provide local admin interface for job submission and status
+
+- [X] T042 [P] Add job tracking manager in `src/services/job_manager.py`
+- [X] T043 [P] Implement admin UI server in `src/cli/admin.py`
+- [X] T044 [P] Unit test for job manager in `tests/unit/test_job_manager.py`
+- [X] T045 [P] Add UI progress/log updates and output preview endpoints in `src/cli/admin.py`
+- [X] T046 [P] Add auto-refresh UI and progress bar in `src/cli/admin.py`
+- [X] T047 [P] Persist job logs to files in `src/services/job_manager.py`
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

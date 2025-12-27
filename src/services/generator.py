@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, Dict, Any, Optional
 
 from src.services.llm_client import LLMClient
+from src.services.prompting import build_prompt
 
 
 def _fallback_unit(chunk: str, reference: str) -> Dict[str, Any]:
@@ -27,9 +28,11 @@ def generate_units(
     for idx, chunk in enumerate(chunks, start=1):
         reference = references[idx - 1]
         if llm_client:
-            payload = {"prompt": chunk}
-            response = llm_client.generate(payload)
-            unit = response.get("unit") or _fallback_unit(chunk, reference)
+            system_prompt, user_prompt = build_prompt(chunk)
+            response = llm_client.generate(system_prompt, user_prompt)
+            unit = response.get("unit") or response
+            if "reference" not in unit:
+                unit["reference"] = reference
         else:
             unit = _fallback_unit(chunk, reference)
         units.append(unit)

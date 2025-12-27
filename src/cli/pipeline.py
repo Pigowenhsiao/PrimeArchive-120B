@@ -1,12 +1,15 @@
 import argparse
 import pathlib
-from typing import List
+from typing import Callable, List, Optional, Tuple
 
+from src.lib.config import load_config
+from src.lib.logging import safe_log
 from src.lib.schema import load_schema, validate_payload
 from src.services.cleaner import clean_text
 from src.services.chunker import smart_chunk
 from src.services.exporter import write_jsonl
 from src.services.generator import generate_units
+from src.services.llm_client import LLMClient
 from src.services.loader import load_text
 from src.services.embeddings import embed_texts
 from src.services.vector_store import build_vector_store
@@ -19,22 +22,73 @@ def build_references(chunks: List[str]) -> List[str]:
     return references
 
 
-def run_pipeline(input_path: pathlib.Path, output_path: pathlib.Path) -> None:
+def _emit(
+    message: str,
+    progress: int,
+    log_callback: Optional[Callable[[str], None]],
+    progress_callback: Optional[Callable[[int, str], None]],
+) -> None:
+    print(message)
+    if log_callback:
+        log_callback(message)
+    if progress_callback:
+        progress_callback(progress, message)
+
+
+def run_pipeline(
+    input_path: pathlib.Path,
+    output_path: pathlib.Path,
+    log_callback: Optional[Callable[[str], None]] = None,
+    progress_callback: Optional[Callable[[int, str], None]] = None,
+) -> None:
+    config = load_config()
+    llm_settings = config.get("llm_settings", {})
+    llm_client = LLMClient(
+        base_url=llm_settings.get("base_url", "http://localhost:11434/v1"),
+        model_name=llm_settings.get("model_name", "gpt-oss:120B-cloud"),
+        temperature=llm_settings.get("temperature", 0.1),
+        top_p=llm_settings.get("top_p", 0.9),
+        repeat_penalty=llm_settings.get("repeat_penalty", 1.1),
+        max_tokens=llm_settings.get("max_tokens", 2048),
+        num_ctx=llm_settings.get("num_ctx", 8192),
+        timeout_seconds=llm_settings.get("timeout", 180),
+        max_retries=config.get("reliability", {}).get("retry_limit", 3),
+    )
+    safe_log("pipeline.start", {"input": str(input_path), "output": str(output_path)})
+    _emit(
+        f"Start pipeline: {input_path} -> {output_path}",
+        5,
+        log_callback,
+        progress_callback,
+    )
     raw_text = load_text(input_path)
+    safe_log("pipeline.loaded", {"chars": len(raw_text)})
+    _emit("Loaded input text", 15, log_callback, progress_callback)
     cleaned = clean_text(raw_text)
+    safe_log("pipeline.cleaned", {"chars": len(cleaned)})
+    _emit("Cleaned text", 30, log_callback, progress_callback)
     chunks = smart_chunk(cleaned)
+    safe_log("pipeline.chunked", {"chunks": len(chunks)})
+    _emit(f"Chunked text into {len(chunks)} parts", 45, log_callback, progress_callback)
     references = build_references(chunks)
-    units = generate_units(chunks, references)
+    units = generate_units(chunks, references, llm_client=llm_client)
+    safe_log("pipeline.generated", {"units": len(units)})
+    _emit(f"Generated {len(units)} units", 70, log_callback, progress_callback)
 
     schema = load_schema()
     for unit in units:
         validate_payload(unit, schema)
 
     write_jsonl(output_path, units)
+    safe_log("pipeline.exported", {"path": str(output_path)})
+    _emit("Exported JSONL output", 85, log_callback, progress_callback)
 
     embeddings = embed_texts([u["description"] for u in units])
     store = build_vector_store(collection_name=input_path.stem)
     store.add([f"unit-{idx}" for idx in range(len(units))], embeddings)
+    safe_log("pipeline.embedded", {"vectors": len(embeddings)})
+    _emit("Embedded units", 95, log_callback, progress_callback)
+    _emit("Pipeline completed", 100, log_callback, progress_callback)
 
 
 def main() -> None:

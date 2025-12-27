@@ -1908,3 +1908,1063 @@
 2025-12-27T13:13:26.988426Z  INFO ghost snapshot gate marked ready
 2025-12-27T13:13:33.440259Z  INFO ToolCall: shell_command {"command":"cat /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
 2025-12-27T13:13:45.114458Z  INFO ToolCall: shell_command {"command":"cat /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T13:14:18.701199Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+-  supported_formats: [".pdf", ".epub", ".docx", ".txt", ".md"]
++  supported_formats: [".pdf", ".epub", ".txt"]
+*** End Patch
+2025-12-27T13:14:28.941189Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/lib/prompts.py
+@@
+-import pathlib
+-
+-
+-DEFAULT_PROMPT_PATH = pathlib.Path("prompts/prompt_template.md")
+-
+-
+-def load_prompt(path: pathlib.Path = DEFAULT_PROMPT_PATH) -> str:
+-    if not path.exists():
+-        raise FileNotFoundError(f"Prompt not found: {path}")
+-    return path.read_text(encoding="utf-8")
++import pathlib
++from typing import Tuple
++
++
++DEFAULT_PROMPT_PATH = pathlib.Path("prompts/prompt_template.md")
++
++
++def _extract_block(content: str, marker: str) -> str:
++    start = content.find(marker)
++    if start == -1:
++        return ""
++    start = content.find('"""', start)
++    if start == -1:
++        return ""
++    start += 3
++    end = content.find('"""', start)
++    if end == -1:
++        return ""
++    return content[start:end].strip()
++
++
++def load_prompt_template(
++    path: pathlib.Path = DEFAULT_PROMPT_PATH,
++) -> Tuple[str, str]:
++    if not path.exists():
++        raise FileNotFoundError(f"Prompt not found: {path}")
++    content = path.read_text(encoding="utf-8")
++    system_prompt = _extract_block(content, "SYSTEM_PROMPT")
++    user_template = _extract_block(content, "USER_PROMPT_TEMPLATE")
++    if not user_template:
++        user_template = content.strip()
++    return system_prompt, user_template
+*** End Patch
+2025-12-27T13:14:36.110955Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/prompting.py
+@@
+-from src.lib.prompts import load_prompt
+-
+-
+-def build_prompt(text: str) -> str:
+-    template = load_prompt()
+-    return template.replace("{{content}}", text)
++from typing import Tuple
++
++from src.lib.prompts import load_prompt_template
++
++
++def build_prompt(text: str) -> Tuple[str, str]:
++    system_prompt, user_template = load_prompt_template()
++    user_prompt = user_template.replace("{text_chunk}", text).replace(
++        "{{content}}", text
++    )
++    return system_prompt, user_prompt
+*** End Patch
+2025-12-27T13:14:58.741219Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/llm_client.py
+@@
+-import time
+-from dataclasses import dataclass
+-from typing import Dict, Any
+-
+-import requests
+-
+-from src.lib.network_guard import enforce_local_only
+-
+-
+-@dataclass
+-class LLMClient:
+-    base_url: str
+-    timeout_seconds: int = 60
+-    max_retries: int = 3
+-
+-    def generate(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+-        enforce_local_only(self.base_url)
+-        attempt = 0
+-        while True:
+-            try:
+-                response = requests.post(
+-                    self.base_url,
+-                    json=payload,
+-                    timeout=self.timeout_seconds,
+-                )
+-                response.raise_for_status()
+-                return response.json()
+-            except requests.Timeout as exc:
+-                attempt += 1
+-                if attempt >= self.max_retries:
+-                    raise TimeoutError("LLM request timed out") from exc
+-                time.sleep(1)
+-            except requests.RequestException as exc:
+-                raise RuntimeError("LLM request failed") from exc
++import json
++import time
++from dataclasses import dataclass
++from typing import Dict, Any, Optional
++
++import requests
++
++from src.lib.network_guard import enforce_local_only
++
++
++def _parse_json_content(content: str) -> Optional[Dict[str, Any]]:
++    try:
++        return json.loads(content)
++    except json.JSONDecodeError:
++        if "{" in content and "}" in content:
++            start = content.find("{")
++            end = content.rfind("}")
++            snippet = content[start : end + 1]
++            try:
++                return json.loads(snippet)
++            except json.JSONDecodeError:
++                return None
++    return None
++
++
++@dataclass
++class LLMClient:
++    base_url: str
++    model_name: str
++    temperature: float = 0.1
++    top_p: float = 0.9
++    repeat_penalty: float = 1.1
++    max_tokens: int = 2048
++    num_ctx: int = 8192
++    timeout_seconds: int = 60
++    max_retries: int = 3
++
++    def generate(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
++        enforce_local_only(self.base_url)
++        attempt = 0
++        while True:
++            try:
++                response = requests.post(
++                    self._endpoint(),
++                    json=self._payload(system_prompt, user_prompt),
++                    timeout=self.timeout_seconds,
++                )
++                response.raise_for_status()
++                data = response.json()
++                content = self._extract_content(data)
++                parsed = _parse_json_content(content)
++                if parsed is not None:
++                    return parsed
++                return {"raw": content}
++            except requests.Timeout as exc:
++                attempt += 1
++                if attempt >= self.max_retries:
++                    raise TimeoutError("LLM request timed out") from exc
++                time.sleep(1)
++            except requests.RequestException as exc:
++                raise RuntimeError("LLM request failed") from exc
++
++    def _endpoint(self) -> str:
++        if self.base_url.endswith("/v1"):
++            return f"{self.base_url}/chat/completions"
++        if self.base_url.endswith("/api/generate"):
++            return self.base_url
++        return f"{self.base_url}/api/generate"
++
++    def _payload(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
++        if self.base_url.endswith("/v1"):
++            messages = []
++            if system_prompt:
++                messages.append({"role": "system", "content": system_prompt})
++            messages.append({"role": "user", "content": user_prompt})
++            return {
++                "model": self.model_name,
++                "messages": messages,
++                "temperature": self.temperature,
++                "top_p": self.top_p,
++                "max_tokens": self.max_tokens,
++            }
++        return {
++            "model": self.model_name,
++            "prompt": f"{system_prompt}\n\n{user_prompt}".strip(),
++            "stream": False,
++            "options": {
++                "temperature": self.temperature,
++                "top_p": self.top_p,
++                "repeat_penalty": self.repeat_penalty,
++                "num_ctx": self.num_ctx,
++                "num_predict": self.max_tokens,
++            },
++        }
++
++    @staticmethod
++    def _extract_content(data: Dict[str, Any]) -> str:
++        if "choices" in data:
++            return data["choices"][0]["message"]["content"]
++        return data.get("response", "")
+*** End Patch
+2025-12-27T13:15:06.216343Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/generator.py
+@@
+-from src.services.llm_client import LLMClient
++from src.services.llm_client import LLMClient
++from src.services.prompting import build_prompt
+@@
+-    for idx, chunk in enumerate(chunks, start=1):
+-        reference = references[idx - 1]
+-        if llm_client:
+-            payload = {"prompt": chunk}
+-            response = llm_client.generate(payload)
+-            unit = response.get("unit") or _fallback_unit(chunk, reference)
++    for idx, chunk in enumerate(chunks, start=1):
++        reference = references[idx - 1]
++        if llm_client:
++            system_prompt, user_prompt = build_prompt(chunk)
++            response = llm_client.generate(system_prompt, user_prompt)
++            unit = response.get("unit") or response
++            if "reference" not in unit:
++                unit["reference"] = reference
+         else:
+             unit = _fallback_unit(chunk, reference)
+*** End Patch
+2025-12-27T13:15:18.505553Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+-from src.lib.schema import load_schema, validate_payload
++from src.lib.config import load_config
++from src.lib.schema import load_schema, validate_payload
+ from src.services.cleaner import clean_text
+ from src.services.chunker import smart_chunk
+ from src.services.exporter import write_jsonl
+ from src.services.generator import generate_units
++from src.services.llm_client import LLMClient
+ from src.services.loader import load_text
+ from src.services.embeddings import embed_texts
+ from src.services.vector_store import build_vector_store
+@@
+ def run_pipeline(input_path: pathlib.Path, output_path: pathlib.Path) -> None:
++    config = load_config()
++    llm_settings = config.get("llm_settings", {})
++    llm_client = LLMClient(
++        base_url=llm_settings.get("base_url", "http://localhost:11434/v1"),
++        model_name=llm_settings.get("model_name", "gpt-oss:120B-cloud"),
++        temperature=llm_settings.get("temperature", 0.1),
++        top_p=llm_settings.get("top_p", 0.9),
++        repeat_penalty=llm_settings.get("repeat_penalty", 1.1),
++        max_tokens=llm_settings.get("max_tokens", 2048),
++        num_ctx=llm_settings.get("num_ctx", 8192),
++        timeout_seconds=llm_settings.get("timeout", 180),
++        max_retries=config.get("reliability", {}).get("retry_limit", 3),
++    )
+     raw_text = load_text(input_path)
+     cleaned = clean_text(raw_text)
+     chunks = smart_chunk(cleaned)
+     references = build_references(chunks)
+-    units = generate_units(chunks, references)
++    units = generate_units(chunks, references, llm_client=llm_client)
+@@
+ def main() -> None:
+     parser = argparse.ArgumentParser(description="Book-to-RAG pipeline")
+     parser.add_argument("--input", required=True)
+     parser.add_argument("--format", required=True)
+     parser.add_argument("--output", required=True)
+*** End Patch
+2025-12-27T13:15:31.612690Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+-  base_url: "http://localhost:11434/v1" # Ollama 默認路徑
++  base_url: "https://127.0.0.1:11434/v1" # Ollama 默認路徑
+*** End Patch
+2025-12-27T13:19:01.693873Z  INFO spawning ghost snapshot task
+2025-12-27T13:19:01.790270Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:19:01.790311Z  INFO ghost commit captured: 0092f91982e10e347a60de4c829c72b74ac720e9
+2025-12-27T13:19:01.790321Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:19:06.756915Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book.epub --format epub --output /tmp/test-book-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T13:19:39.597679Z  WARN failed to paste image: no image on clipboard: The clipboard contents were not available in the requested format or the clipboard is empty.
+2025-12-27T13:19:44.367069Z  INFO spawning ghost snapshot task
+2025-12-27T13:19:44.465828Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:19:44.465868Z  INFO ghost commit captured: 892c13975cc910af1b971716f41920a6b72ae9fc
+2025-12-27T13:19:44.465877Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:19:52.121584Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+-  base_url: "https://127.0.0.1:11434/v1" # Ollama 默認路徑
++  base_url: "http://127.0.0.1:11434/v1" # Ollama 默認路徑
+*** End Patch
+2025-12-27T13:19:56.732270Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book.epub --format epub --output /tmp/test-book-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。"}
+2025-12-27T13:20:18.875170Z  INFO spawning ghost snapshot task
+2025-12-27T13:20:18.971676Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:20:18.971715Z  INFO ghost commit captured: 60c1cbd9f4bfd38da5a3fef2c8a038099cedffb9
+2025-12-27T13:20:18.971724Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:20:24.376868Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+-  base_url: "http://127.0.0.1:11434/v1" # Ollama 默認路徑
++  base_url: "http://127.0.0.1:11434" # Ollama 默認路徑
+*** End Patch
+2025-12-27T13:20:28.786681Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book.epub --format epub --output /tmp/test-book-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。"}
+2025-12-27T13:20:48.654458Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book.epub --format epub --output /tmp/test-book-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":60000}
+2025-12-27T13:23:16.759145Z  INFO spawning ghost snapshot task
+2025-12-27T13:23:16.850930Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:23:16.850971Z  INFO ghost commit captured: 509c33a490c9b7c0710dab99e647f09f0c2d2df9
+2025-12-27T13:23:16.850980Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:23:21.634832Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+-  timeout: 180                          # 單次 API 調用超時 (秒)
++  timeout: 300                          # 單次 API 調用超時 (秒)
+*** End Patch
+2025-12-27T13:23:27.062775Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book.epub --format epub --output /tmp/test-book-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":300000}
+2025-12-27T13:28:36.824184Z  INFO spawning ghost snapshot task
+2025-12-27T13:28:36.915307Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:28:36.915348Z  INFO ghost commit captured: c0ff9f1a6a0f0c06de2e504b2873d451f7854b52
+2025-12-27T13:28:36.915358Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:28:43.635793Z  INFO spawning ghost snapshot task
+2025-12-27T13:28:43.726823Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:28:43.726864Z  INFO ghost commit captured: f6833121c94ff8dc8c53cd219cbbb5e7da4cf104
+2025-12-27T13:28:43.726874Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:28:54.954884Z  INFO ToolCall: update_plan {"explanation":"這次需要新增控制介面（CLI + 管理視窗）與文件同步，屬於多步實作與文件更新。","plan":[{"step":"盤點現有 CLI 與管線流程，定義管理介面需求與路由/功能範圍","status":"in_progress"},{"step":"實作本地管理介面（Web UI）與啟動/狀態/輸出檢視功能","status":"pending"},{"step":"更新文件與設定（README、quickstart、spec/plan/tasks 相關處）","status":"pending"}]}
+2025-12-27T13:29:09.802806Z  INFO ToolCall: shell_command {"command":"ls /home/pigo/文件/python/PrimeArchive-120B/src/cli","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T13:29:27.724095Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/requirements.txt
+@@
+ pytest
+ pypdf
++fastapi
++uvicorn
+*** End Patch
+2025-12-27T13:29:43.597415Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/src/services/job_manager.py\nimport threading\nimport uuid\nfrom dataclasses import dataclass, field\nfrom datetime import datetime\nfrom typing import Dict, Optional\n\n\n@dataclass\nclass JobStatus:\n    job_id: str\n    status: str\n    input_path: str\n    output_path: str\n    file_format: str\n    started_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())\n    finished_at: Optional[str] = None\n    error: Optional[str] = None\n\n\nclass JobManager:\n    def __init__(self) -> None:\n        self._jobs: Dict[str, JobStatus] = {}\n        self._lock = threading.Lock()\n\n    def create_job(self, input_path: str, output_path: str, file_format: str) -> JobStatus:\n        job_id = str(uuid.uuid4())\n        status = JobStatus(\n            job_id=job_id,\n            status=\"queued\",\n            input_path=input_path,\n            output_path=output_path,\n            file_format=file_format,\n        )\n        with self._lock:\n            self._jobs[job_id] = status\n        return status\n\n    def get_job(self, job_id: str) -> Optional[JobStatus]:\n        with self._lock:\n            return self._jobs.get(job_id)\n\n    def list_jobs(self) -> Dict[str, JobStatus]:\n        with self._lock:\n            return dict(self._jobs)\n\n    def update_job(self, job_id: str, **kwargs: str) -> None:\n        with self._lock:\n            job = self._jobs.get(job_id)\n            if not job:\n                return\n            for key, value in kwargs.items():\n                setattr(job, key, value)\n\n    def run_in_thread(self, job_id: str, target, *args) -> None:\n        def runner() -> None:\n            self.update_job(job_id, status=\"running\")\n            try:\n                target(*args)\n                self.update_job(\n                    job_id,\n                    status=\"succeeded\",\n                    finished_at=datetime.utcnow().isoformat(),\n                )\n            except Exception as exc:  # pragma: no cover - runtime errors\n                self.update_job(\n                    job_id,\n                    status=\"failed\",\n                    finished_at=datetime.utcnow().isoformat(),\n                    error=str(exc),\n                )\n\n        thread = threading.Thread(target=runner, daemon=True)\n        thread.start()\nEOF","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T13:30:12.065554Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py\nimport argparse\nimport pathlib\nfrom typing import Dict\n\nfrom fastapi import FastAPI, Form\nfrom fastapi.responses import HTMLResponse, JSONResponse\nimport uvicorn\n\nfrom src.cli.pipeline import run_pipeline\nfrom src.services.job_manager import JobManager\n\n\napp = FastAPI(title=\"PrimeArchive Control Panel\")\njob_manager = JobManager()\n\n\ndef _render_home(jobs: Dict[str, str]) -> str:\n    rows = []\n    for job in jobs.values():\n        rows.append(\n            f\"<tr><td>{job.job_id}</td><td>{job.status}</td>\"\n            f\"<td>{job.input_path}</td><td>{job.output_path}</td>\"\n            f\"<td>{job.error or ''}</td></tr>\"\n        )\n    table_rows = \"\".join(rows) or (\n        \"<tr><td colspan='5'>No jobs yet.</td></tr>\"\n    )\n    return f\"\"\"\n<!doctype html>\n<html>\n<head>\n  <meta charset='utf-8'>\n  <title>PrimeArchive Control Panel</title>\n  <style>\n    body {{ font-family: Arial, sans-serif; margin: 24px; }}\n    table {{ border-collapse: collapse; width: 100%; margin-top: 16px; }}\n    th, td {{ border: 1px solid #ccc; padding: 8px; text-align: left; }}\n    th {{ background: #f5f5f5; }}\n    input, select {{ padding: 6px; margin: 4px 0; width: 100%; }}\n    button {{ padding: 8px 12px; }}\n  </style>\n</head>\n<body>\n  <h1>PrimeArchive 控制面板</h1>\n  <form method='post' action='/run'>\n    <label>輸入檔案路徑</label>\n    <input name='input_path' placeholder='/path/to/book.epub' required />\n    <label>格式</label>\n    <select name='file_format'>\n      <option value='epub'>epub</option>\n      <option value='pdf'>pdf</option>\n      <option value='txt'>txt</option>\n    </select>\n    <label>輸出 JSONL 路徑</label>\n    <input name='output_path' placeholder='/tmp/output.jsonl' required />\n    <button type='submit'>開始處理</button>\n  </form>\n\n  <h2>最近任務</h2>\n  <table>\n    <thead>\n      <tr><th>ID</th><th>狀態</th><th>輸入</th><th>輸出</th><th>錯誤</th></tr>\n    </thead>\n    <tbody>\n      {table_rows}\n    </tbody>\n  </table>\n</body>\n</html>\n\"\"\"\n\n\n@app.get(\"/\", response_class=HTMLResponse)\ndef home() -> str:\n    jobs = job_manager.list_jobs()\n    return _render_home(jobs)\n\n\n@app.post(\"/run\")\ndef run_job(\n    input_path: str = Form(...),\n    output_path: str = Form(...),\n    file_format: str = Form(...),\n) -> HTMLResponse:\n    input_file = pathlib.Path(input_path)\n    if not input_file.exists():\n        return HTMLResponse(\n            f\"<p>Input file not found: {input_path}</p>\", status_code=400\n        )\n    job = job_manager.create_job(input_path, output_path, file_format)\n    job_manager.run_in_thread(\n        job.job_id,\n        run_pipeline,\n        pathlib.Path(input_path),\n        pathlib.Path(output_path),\n    )\n    return HTMLResponse(\n        f\"<p>Job started: {job.job_id}</p><p><a href='/'>Back</a></p>\",\n        status_code=202,\n    )\n\n\n@app.get(\"/jobs\")\ndef list_jobs() -> JSONResponse:\n    jobs = {\n        job_id: {\n            \"status\": job.status,\n            \"input\": job.input_path,\n            \"output\": job.output_path,\n            \"error\": job.error,\n            \"started_at\": job.started_at,\n            \"finished_at\": job.finished_at,\n        }\n        for job_id, job in job_manager.list_jobs().items()\n    }\n    return JSONResponse(jobs)\n\n\n@app.get(\"/jobs/{job_id}\")\ndef get_job(job_id: str) -> JSONResponse:\n    job = job_manager.get_job(job_id)\n    if not job:\n        return JSONResponse({\"error\": \"not found\"}, status_code=404)\n    return JSONResponse(\n        {\n            \"status\": job.status,\n            \"input\": job.input_path,\n            \"output\": job.output_path,\n            \"error\": job.error,\n            \"started_at\": job.started_at,\n            \"finished_at\": job.finished_at,\n        }\n    )\n\n\ndef main() -> None:\n    parser = argparse.ArgumentParser(description=\"PrimeArchive admin UI\")\n    parser.add_argument(\"--host\", default=\"127.0.0.1\")\n    parser.add_argument(\"--port\", type=int, default=8000)\n    args = parser.parse_args()\n    uvicorn.run(app, host=args.host, port=args.port)\n\n\nif __name__ == \"__main__\":\n    main()\nEOF","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T13:30:25.477582Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+-from src.lib.config import load_config
++from src.lib.config import load_config
++from src.lib.logging import safe_log
+@@
+ def run_pipeline(input_path: pathlib.Path, output_path: pathlib.Path) -> None:
+     config = load_config()
+     llm_settings = config.get("llm_settings", {})
+@@
+-    raw_text = load_text(input_path)
+-    cleaned = clean_text(raw_text)
+-    chunks = smart_chunk(cleaned)
+-    references = build_references(chunks)
+-    units = generate_units(chunks, references, llm_client=llm_client)
++    safe_log("pipeline.start", {"input": str(input_path), "output": str(output_path)})
++    raw_text = load_text(input_path)
++    safe_log("pipeline.loaded", {"chars": len(raw_text)})
++    cleaned = clean_text(raw_text)
++    safe_log("pipeline.cleaned", {"chars": len(cleaned)})
++    chunks = smart_chunk(cleaned)
++    safe_log("pipeline.chunked", {"chunks": len(chunks)})
++    references = build_references(chunks)
++    units = generate_units(chunks, references, llm_client=llm_client)
++    safe_log("pipeline.generated", {"units": len(units)})
+@@
+-    write_jsonl(output_path, units)
++    write_jsonl(output_path, units)
++    safe_log("pipeline.exported", {"path": str(output_path)})
+@@
+-    store.add([f"unit-{idx}" for idx in range(len(units))], embeddings)
++    store.add([f"unit-{idx}" for idx in range(len(units))], embeddings)
++    safe_log("pipeline.embedded", {"vectors": len(embeddings)})
+*** End Patch
+2025-12-27T13:30:35.103493Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+ vector_store:
+   provider: "chromadb"
+   persist_dir: "./data/vector_db"
+   embedding_model: "BAAI/bge-m3"        # 中英日多語言通用模型
+   collection_name_prefix: "arch_v1_"
++
++# ------------------------------------------
++# 6. 管理介面 (Admin UI)
++# ------------------------------------------
++ui:
++  host: "127.0.0.1"
++  port: 8000
+*** End Patch
+2025-12-27T13:30:43.091958Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+ ## Quickstart
+ 
+ See `specs/001-universal-book-rag/quickstart.md`.
++
++## CLI Usage
++
++```bash
++. .venv/bin/activate
++export PYTHONPATH=.
++python -m src.cli.pipeline --input /path/to/book.epub --format epub --output /tmp/output.jsonl
++python -m src.cli.validate --input /tmp/output.jsonl
++```
++
++## Admin UI
++
++```bash
++. .venv/bin/activate
++export PYTHONPATH=.
++python -m src.cli.admin --host 127.0.0.1 --port 8000
++```
++
++Open http://127.0.0.1:8000 to submit jobs and view status.
+*** End Patch
+2025-12-27T13:30:49.849838Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md
+@@
+ ## Run (CLI)
+ 
+ ```bash
+ bookrag run --input /path/to/book.pdf --format pdf --output /path/to/output.jsonl
+ ```
+ 
++## Run (Admin UI)
++
++```bash
++. .venv/bin/activate
++export PYTHONPATH=.
++python -m src.cli.admin --host 127.0.0.1 --port 8000
++```
++
++Open http://127.0.0.1:8000 to submit jobs and view status.
++
+ ## Outputs
+*** End Patch
+2025-12-27T13:31:06.643405Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ ### User Story 3 - 向量化與查詢驗證 (Priority: P3)
+@@
+ 2. **Given** 成功建置集合，**When** 執行檢索驗證腳本，**Then** 回傳命中
+    率報告。
+ 
++---
++
++### User Story 4 - 管理視窗操作與狀態檢視 (Priority: P4)
++
++作為內容管理者，我希望透過本機管理視窗提交處理任務並查看狀態，以便監控
++管線進度。
++
++**Why this priority**: 讓非技術使用者可直接操作管線並追蹤結果。
++
++**Independent Test**: 透過管理視窗提交任務後，可看到任務狀態與輸出路徑。
++
++**Acceptance Scenarios**:
++
++1. **Given** 本機管理視窗已啟動，**When** 提交輸入與輸出路徑，**Then**
++   系統建立處理任務並回傳任務編號。
++2. **Given** 任務完成或失敗，**When** 查看狀態頁，**Then**
++   顯示最新狀態與錯誤訊息（若有）。
++
+ ### Edge Cases
+@@
+ - **FR-012**: 系統 MUST 僅提供本機 CLI 介面，不提供 HTTP API。
++- **FR-013**: 系統 MUST 提供本機管理視窗，可提交任務並查看狀態。
+*** End Patch
+2025-12-27T13:31:14.732631Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md
+@@
+-Build a local-only CLI pipeline that ingests multi-format books, cleans and chunks
+-content, generates structured knowledge units with references, validates
+-hallucination rate via fixed-size sampling, and exports JSONL plus embeddings in
+-ChromaDB.
++Build a local-only CLI pipeline that ingests multi-format books, cleans and chunks
++content, generates structured knowledge units with references, validates
++hallucination rate via fixed-size sampling, and exports JSONL plus embeddings in
++ChromaDB, with a local admin UI for job submission and status viewing.
+@@
+-**Primary Dependencies**: Ollama (local LLM runtime), LangChain, Unstructured,
+-ChromaDB, BGE-M3 embedding model  
++**Primary Dependencies**: Ollama (local LLM runtime), LangChain, Unstructured,
++ChromaDB, BGE-M3 embedding model, FastAPI, Uvicorn  
+@@
+ src/
+ ├── cli/
++├── admin/
+ ├── loaders/
+@@
+ ├── validation/
+ └── models/
+*** End Patch
+2025-12-27T13:31:21.184142Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md
+@@
+ src/
+ ├── cli/
+-├── admin/
+ ├── loaders/
+*** End Patch
+2025-12-27T13:31:32.654933Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/tasks.md
+@@
+ ## Phase 6: Polish & Cross-Cutting Concerns
+ 
+ **Purpose**: Improvements that affect multiple user stories
+ 
+ - [X] T039 [P] Update documentation in `README.md` and `specs/001-universal-book-rag/quickstart.md`
+ - [X] T040 [P] Add reproducibility metadata capture in `src/services/metadata.py`
+ - [X] T041 Run quickstart validation for CLI examples in `specs/001-universal-book-rag/quickstart.md`
+ 
+ ---
+ 
++## Phase 7: Admin UI (Local Control Panel)
++
++**Purpose**: Provide local admin interface for job submission and status
++
++- [ ] T042 [P] Add job tracking manager in `src/services/job_manager.py`
++- [ ] T043 [P] Implement admin UI server in `src/cli/admin.py`
++- [ ] T044 [P] Unit test for job manager in `tests/unit/test_job_manager.py`
++
++---
++
+ ## Dependencies & Execution Order
+*** End Patch
+2025-12-27T13:31:39.617799Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/tests/unit/test_job_manager.py\nfrom src.services.job_manager import JobManager\n\n\ndef test_job_lifecycle_updates():\n    manager = JobManager()\n    job = manager.create_job(\"in.txt\", \"out.jsonl\", \"txt\")\n    assert job.status == \"queued\"\n    manager.update_job(job.job_id, status=\"running\")\n    updated = manager.get_job(job.job_id)\n    assert updated is not None\n    assert updated.status == \"running\"\nEOF","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T13:31:46.375524Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/tasks.md
+@@
+-- [ ] T042 [P] Add job tracking manager in `src/services/job_manager.py`
+-- [ ] T043 [P] Implement admin UI server in `src/cli/admin.py`
+-- [ ] T044 [P] Unit test for job manager in `tests/unit/test_job_manager.py`
++- [X] T042 [P] Add job tracking manager in `src/services/job_manager.py`
++- [X] T043 [P] Implement admin UI server in `src/cli/admin.py`
++- [X] T044 [P] Unit test for job manager in `tests/unit/test_job_manager.py`
+*** End Patch
+2025-12-27T13:31:55.739365Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+-- Q: 介面型態偏好？ → A: 僅本機 CLI，不提供 HTTP API。
++- Q: 介面型態偏好？ → A: 本機 CLI + 本機管理視窗，不提供對外 HTTP API。
+@@
+-- **FR-012**: 系統 MUST 僅提供本機 CLI 介面，不提供 HTTP API。
++- **FR-012**: 系統 MUST 提供本機 CLI 與本機管理視窗，不提供對外 HTTP API。
+*** End Patch
+2025-12-27T13:32:09.620040Z  INFO ToolCall: update_plan {"explanation":"已完成管理介面功能實作與文件同步。","plan":[{"step":"盤點現有 CLI 與管線流程，定義管理介面需求與路由/功能範圍","status":"completed"},{"step":"實作本地管理介面（Web UI）與啟動/狀態/輸出檢視功能","status":"completed"},{"step":"更新文件與設定（README、quickstart、spec/plan/tasks 相關處）","status":"completed"}]}
+2025-12-27T13:33:11.210383Z  INFO spawning ghost snapshot task
+2025-12-27T13:33:11.318791Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:33:11.318845Z  INFO ghost commit captured: f2964e3f078117a4ae9d0ed351f9e3f720477490
+2025-12-27T13:33:11.318858Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:33:33.692792Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/job_manager.py
+@@
+-from dataclasses import dataclass, field
++from dataclasses import dataclass, field
+@@
+ class JobStatus:
+@@
+     finished_at: Optional[str] = None
+     error: Optional[str] = None
++    progress: int = 0
++    last_step: str = "queued"
++    logs: list[str] = field(default_factory=list)
+@@
+ class JobManager:
+@@
+     def update_job(self, job_id: str, **kwargs: str) -> None:
+@@
+             for key, value in kwargs.items():
+                 setattr(job, key, value)
+ 
++    def append_log(self, job_id: str, message: str) -> None:
++        with self._lock:
++            job = self._jobs.get(job_id)
++            if not job:
++                return
++            job.logs.append(message)
++
+*** End Patch
+2025-12-27T13:33:49.157566Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+-import argparse
+-import pathlib
+-from typing import List
++import argparse
++import pathlib
++from typing import Callable, List, Optional, Tuple
+@@
+-def run_pipeline(input_path: pathlib.Path, output_path: pathlib.Path) -> None:
++def _emit(
++    message: str,
++    progress: int,
++    log_callback: Optional[Callable[[str], None]],
++    progress_callback: Optional[Callable[[int, str], None]],
++) -> None:
++    print(message)
++    if log_callback:
++        log_callback(message)
++    if progress_callback:
++        progress_callback(progress, message)
++
++
++def run_pipeline(
++    input_path: pathlib.Path,
++    output_path: pathlib.Path,
++    log_callback: Optional[Callable[[str], None]] = None,
++    progress_callback: Optional[Callable[[int, str], None]] = None,
++) -> None:
+@@
+-    safe_log("pipeline.start", {"input": str(input_path), "output": str(output_path)})
++    safe_log("pipeline.start", {"input": str(input_path), "output": str(output_path)})
++    _emit(
++        f"Start pipeline: {input_path} -> {output_path}",
++        5,
++        log_callback,
++        progress_callback,
++    )
+     raw_text = load_text(input_path)
+     safe_log("pipeline.loaded", {"chars": len(raw_text)})
++    _emit("Loaded input text", 15, log_callback, progress_callback)
+     cleaned = clean_text(raw_text)
+     safe_log("pipeline.cleaned", {"chars": len(cleaned)})
++    _emit("Cleaned text", 30, log_callback, progress_callback)
+     chunks = smart_chunk(cleaned)
+     safe_log("pipeline.chunked", {"chunks": len(chunks)})
++    _emit(f"Chunked text into {len(chunks)} parts", 45, log_callback, progress_callback)
+     references = build_references(chunks)
+     units = generate_units(chunks, references, llm_client=llm_client)
+     safe_log("pipeline.generated", {"units": len(units)})
++    _emit(f"Generated {len(units)} units", 70, log_callback, progress_callback)
+@@
+     write_jsonl(output_path, units)
+     safe_log("pipeline.exported", {"path": str(output_path)})
++    _emit("Exported JSONL output", 85, log_callback, progress_callback)
+@@
+     store.add([f"unit-{idx}" for idx in range(len(units))], embeddings)
+     safe_log("pipeline.embedded", {"vectors": len(embeddings)})
++    _emit("Embedded units", 95, log_callback, progress_callback)
++    _emit("Pipeline completed", 100, log_callback, progress_callback)
+*** End Patch
+2025-12-27T13:34:11.148047Z  WARN stream disconnected - retrying turn (1/5 in 193ms)...
+2025-12-27T13:34:41.791432Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py
+@@
+-import argparse
+-import pathlib
+-from typing import Dict
++import argparse
++import pathlib
++from typing import Dict, Optional
+@@
+-from fastapi.responses import HTMLResponse, JSONResponse
++from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
+ import uvicorn
+ 
+ from src.cli.pipeline import run_pipeline
++from src.lib.config import load_config
+ from src.services.job_manager import JobManager
+ 
+ 
+ app = FastAPI(title="PrimeArchive Control Panel")
+ job_manager = JobManager()
+ 
+ 
+-def _render_home(jobs: Dict[str, str]) -> str:
++def _ollama_status() -> Dict[str, str]:
++    config = load_config()
++    base_url = config.get("llm_settings", {}).get("base_url", "")
++    try:
++        import requests
++
++        response = requests.get(f"{base_url}/api/version", timeout=2)
++        if response.ok:
++            return {"status": "ok", "detail": response.json().get("version", "")}
++        return {"status": "error", "detail": f"HTTP {response.status_code}"}
++    except Exception as exc:  # pragma: no cover - runtime connectivity
++        return {"status": "error", "detail": str(exc)}
++
++
++def _render_home(jobs: Dict[str, str], status: Dict[str, str]) -> str:
+     rows = []
+     for job in jobs.values():
++        output_link = (
++            f"<a href='/jobs/{job.job_id}/output'>view</a> | "
++            f"<a href='/jobs/{job.job_id}/download'>download</a>"
++            if job.output_path
++            else ""
++        )
+         rows.append(
+-            f"<tr><td>{job.job_id}</td><td>{job.status}</td>"
+-            f"<td>{job.input_path}</td><td>{job.output_path}</td>"
+-            f"<td>{job.error or ''}</td></tr>"
++            f"<tr><td>{job.job_id}</td><td>{job.status}</td>"
++            f"<td>{job.progress}%</td><td>{job.last_step}</td>"
++            f"<td>{job.input_path}</td><td>{job.output_path}</td>"
++            f"<td>{output_link}</td><td>{job.error or ''}</td></tr>"
+         )
+     table_rows = "".join(rows) or (
+-        "<tr><td colspan='5'>No jobs yet.</td></tr>"
++        "<tr><td colspan='8'>No jobs yet.</td></tr>"
+     )
+     return f"""
+ <!doctype html>
+ <html>
+ <head>
+@@
+ <body>
+   <h1>PrimeArchive 控制面板</h1>
++  <p>Ollama 狀態: <strong>{status['status']}</strong> {status['detail']}</p>
+   <form method='post' action='/run'>
+@@
+   <h2>最近任務</h2>
+   <table>
+     <thead>
+-      <tr><th>ID</th><th>狀態</th><th>輸入</th><th>輸出</th><th>錯誤</th></tr>
++      <tr><th>ID</th><th>狀態</th><th>進度</th><th>步驟</th><th>輸入</th><th>輸出</th><th>輸出檢視</th><th>錯誤</th></tr>
+     </thead>
+     <tbody>
+       {table_rows}
+     </tbody>
+   </table>
+ </body>
+ </html>
+ """
+@@
+ def home() -> str:
+     jobs = job_manager.list_jobs()
+-    return _render_home(jobs)
++    status = _ollama_status()
++    return _render_home(jobs, status)
+@@
+ def run_job(
+@@
+ ) -> HTMLResponse:
+@@
+     job = job_manager.create_job(input_path, output_path, file_format)
+-    job_manager.run_in_thread(
+-        job.job_id,
+-        run_pipeline,
+-        pathlib.Path(input_path),
+-        pathlib.Path(output_path),
+-    )
++    job_manager.run_in_thread(
++        job.job_id,
++        run_pipeline,
++        pathlib.Path(input_path),
++        pathlib.Path(output_path),
++        lambda msg: job_manager.append_log(job.job_id, msg),
++        lambda progress, step: job_manager.update_job(
++            job.job_id, progress=progress, last_step=step
++        ),
++    )
+@@
+ def list_jobs() -> JSONResponse:
+@@
+             "error": job.error,
++            "progress": job.progress,
++            "last_step": job.last_step,
+             "started_at": job.started_at,
+             "finished_at": job.finished_at,
+         }
+         for job_id, job in job_manager.list_jobs().items()
+     }
+     return JSONResponse(jobs)
+@@
+ def get_job(job_id: str) -> JSONResponse:
+     job = job_manager.get_job(job_id)
+     if not job:
+         return JSONResponse({"error": "not found"}, status_code=404)
+     return JSONResponse(
+         {
+             "status": job.status,
+             "input": job.input_path,
+             "output": job.output_path,
+             "error": job.error,
++            "progress": job.progress,
++            "last_step": job.last_step,
++            "logs": job.logs[-50:],
+             "started_at": job.started_at,
+             "finished_at": job.finished_at,
+         }
+     )
++
++
++@app.get("/jobs/{job_id}/output")
++def view_output(job_id: str) -> PlainTextResponse:
++    job = job_manager.get_job(job_id)
++    if not job or not job.output_path:
++        return PlainTextResponse("not found", status_code=404)
++    path = pathlib.Path(job.output_path)
++    if not path.exists():
++        return PlainTextResponse("output not ready", status_code=404)
++    content = path.read_text(encoding="utf-8").splitlines()
++    preview = "\n".join(content[:20])
++    return PlainTextResponse(preview)
++
++
++@app.get("/jobs/{job_id}/download")
++def download_output(job_id: str) -> FileResponse:
++    job = job_manager.get_job(job_id)
++    if not job or not job.output_path:
++        return FileResponse("", status_code=404)
++    path = pathlib.Path(job.output_path)
++    if not path.exists():
++        return FileResponse("", status_code=404)
++    return FileResponse(path)
+*** End Patch
+2025-12-27T13:34:50.083177Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/tasks.md
+@@
+ - [X] T042 [P] Add job tracking manager in `src/services/job_manager.py`
+ - [X] T043 [P] Implement admin UI server in `src/cli/admin.py`
+ - [X] T044 [P] Unit test for job manager in `tests/unit/test_job_manager.py`
++- [X] T045 [P] Add UI progress/log updates and output preview endpoints in `src/cli/admin.py`
+*** End Patch
+2025-12-27T13:34:55.615714Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ 2. **Given** 任務完成或失敗，**When** 查看狀態頁，**Then**
+    顯示最新狀態與錯誤訊息（若有）。
++3. **Given** 管理視窗開啟，**When** 查看任務清單，**Then**
++   可看到進度、最近步驟、輸出預覽與下載連結，並顯示 Ollama 連線狀況。
+*** End Patch
+2025-12-27T13:35:00.017782Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md
+@@
+ Open http://127.0.0.1:8000 to submit jobs and view status.
++The UI shows progress, recent step, output preview/download, and Ollama status.
+*** End Patch
+2025-12-27T13:35:04.422974Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+ Open http://127.0.0.1:8000 to submit jobs and view status.
++The UI shows progress, last step, output preview/download, and Ollama status.
+*** End Patch
+2025-12-27T13:35:47.551325Z  INFO spawning ghost snapshot task
+2025-12-27T13:35:47.657562Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:35:47.657684Z  INFO ghost commit captured: 99a5321d1a35069b523ea0d2ab1b2582c7ff1d33
+2025-12-27T13:35:47.657715Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:36:05.201029Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/job_manager.py
+@@
+-from dataclasses import dataclass, field
++from dataclasses import dataclass, field
+ from datetime import datetime
+-from typing import Dict, Optional
++from pathlib import Path
++from typing import Dict, Optional
+ 
+ 
+ @dataclass
+ class JobStatus:
+@@
+     progress: int = 0
+     last_step: str = "queued"
+     logs: list[str] = field(default_factory=list)
++    log_path: Optional[str] = None
+@@
+ class JobManager:
+     def __init__(self) -> None:
+         self._jobs: Dict[str, JobStatus] = {}
+         self._lock = threading.Lock()
++        self._log_dir = Path("data/job_logs")
++        self._log_dir.mkdir(parents=True, exist_ok=True)
+ 
+     def create_job(self, input_path: str, output_path: str, file_format: str) -> JobStatus:
+         job_id = str(uuid.uuid4())
++        log_path = self._log_dir / f"{job_id}.log"
+         status = JobStatus(
+             job_id=job_id,
+             status="queued",
+             input_path=input_path,
+             output_path=output_path,
+             file_format=file_format,
++            log_path=str(log_path),
+         )
+         with self._lock:
+             self._jobs[job_id] = status
+         return status
+@@
+     def append_log(self, job_id: str, message: str) -> None:
+         with self._lock:
+             job = self._jobs.get(job_id)
+             if not job:
+                 return
+             job.logs.append(message)
++            if job.log_path:
++                Path(job.log_path).parent.mkdir(parents=True, exist_ok=True)
++                with open(job.log_path, "a", encoding="utf-8") as handle:
++                    handle.write(message)
++                    handle.write("\n")
+*** End Patch
+2025-12-27T13:36:22.954346Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py
+@@
+-  <style>
+-    body { font-family: Arial, sans-serif; margin: 24px; }
+-    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+-    th { background: #f5f5f5; }
+-    input, select { padding: 6px; margin: 4px 0; width: 100%; }
+-    button { padding: 8px 12px; }
+-  </style>
++  <style>
++    body { font-family: Arial, sans-serif; margin: 24px; }
++    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
++    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
++    th { background: #f5f5f5; }
++    input, select { padding: 6px; margin: 4px 0; width: 100%; }
++    button { padding: 8px 12px; }
++    .progress-wrap { background: #eee; height: 10px; border-radius: 6px; overflow: hidden; }
++    .progress-bar { background: #4a7cff; height: 10px; }
++  </style>
++  <meta http-equiv="refresh" content="5" />
+@@
+-    for job in jobs.values():
++    for job in jobs.values():
++        progress_bar = (
++            "<div class='progress-wrap'>"
++            f"<div class='progress-bar' style='width: {job.progress}%;'></div>"
++            "</div>"
++        )
+         output_link = (
+             f"<a href='/jobs/{job.job_id}/output'>view</a> | "
+             f"<a href='/jobs/{job.job_id}/download'>download</a>"
+             if job.output_path
+             else ""
+         )
+         rows.append(
+             f"<tr><td>{job.job_id}</td><td>{job.status}</td>"
+-            f"<td>{job.progress}%</td><td>{job.last_step}</td>"
++            f"<td>{progress_bar}<div>{job.progress}%</div></td><td>{job.last_step}</td>"
+             f"<td>{job.input_path}</td><td>{job.output_path}</td>"
+             f"<td>{output_link}</td><td>{job.error or ''}</td></tr>"
+         )
+@@
+-  <p>Ollama 狀態: <strong>{status['status']}</strong> {status['detail']}</p>
++  <p>Ollama 狀態: <strong>{status['status']}</strong> {status['detail']}</p>
++  <p>頁面每 5 秒自動刷新</p>
+*** End Patch
+2025-12-27T13:36:29.619387Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T13:36:43.650154Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py
+@@
+-    for job in jobs.values():
++    for job in jobs.values():
++        progress_bar = (
++            "<div class='progress-wrap'>"
++            f"<div class='progress-bar' style='width: {job.progress}%;'></div>"
++            "</div>"
++        )
+         output_link = (
+             f"<a href='/jobs/{job.job_id}/output'>view</a> | "
+             f"<a href='/jobs/{job.job_id}/download'>download</a>"
+             if job.output_path
+             else ""
+         )
+         rows.append(
+             f"<tr><td>{job.job_id}</td><td>{job.status}</td>"
+-            f"<td>{job.progress}%</td><td>{job.last_step}</td>"
++            f"<td>{progress_bar}<div>{job.progress}%</div></td><td>{job.last_step}</td>"
+             f"<td>{job.input_path}</td><td>{job.output_path}</td>"
+             f"<td>{output_link}</td><td>{job.error or ''}</td></tr>"
+         )
+@@
+ <head>
+   <meta charset='utf-8'>
++  <meta http-equiv="refresh" content="5" />
+   <title>PrimeArchive Control Panel</title>
+   <style>
+     body {{ font-family: Arial, sans-serif; margin: 24px; }}
+     table {{ border-collapse: collapse; width: 100%; margin-top: 16px; }}
+     th, td {{ border: 1px solid #ccc; padding: 8px; text-align: left; }}
+     th {{ background: #f5f5f5; }}
+     input, select {{ padding: 6px; margin: 4px 0; width: 100%; }}
+     button {{ padding: 8px 12px; }}
++    .progress-wrap {{ background: #eee; height: 10px; border-radius: 6px; overflow: hidden; }}
++    .progress-bar {{ background: #4a7cff; height: 10px; }}
+   </style>
+ </head>
+ <body>
+   <h1>PrimeArchive 控制面板</h1>
+   <p>Ollama 狀態: <strong>{status['status']}</strong> {status['detail']}</p>
++  <p>頁面每 5 秒自動刷新</p>
+*** End Patch
+2025-12-27T13:36:50.920834Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/tasks.md
+@@
+-- [X] T045 [P] Add UI progress/log updates and output preview endpoints in `src/cli/admin.py`
++- [X] T045 [P] Add UI progress/log updates and output preview endpoints in `src/cli/admin.py`
++- [X] T046 [P] Add auto-refresh UI and progress bar in `src/cli/admin.py`
+*** End Patch
+2025-12-27T13:37:02.288776Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ 1. **Given** 本機管理視窗已啟動，**When** 提交輸入與輸出路徑，**Then**
+    系統建立處理任務並回傳任務編號。
+ 2. **Given** 任務完成或失敗，**When** 查看狀態頁，**Then**
+    顯示最新狀態與錯誤訊息（若有）。
+ 3. **Given** 管理視窗開啟，**When** 查看任務清單，**Then**
+    可看到進度、最近步驟、輸出預覽與下載連結，並顯示 Ollama 連線狀況。
++4. **Given** 任務執行中或完成，**When** 檢視任務記錄，**Then**
++   可在本機紀錄檔中追溯每一步的輸出與錯誤。
+@@
+-- **FR-013**: 系統 MUST 提供本機管理視窗，可提交任務並查看狀態。
++- **FR-013**: 系統 MUST 提供本機管理視窗，可提交任務並查看狀態。
++- **FR-014**: 系統 MUST 將每次任務的處理紀錄寫入本機日誌檔。
+*** End Patch
+2025-12-27T13:37:07.827033Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/tasks.md
+@@
+ - [X] T045 [P] Add UI progress/log updates and output preview endpoints in `src/cli/admin.py`
+ - [X] T046 [P] Add auto-refresh UI and progress bar in `src/cli/admin.py`
++- [X] T047 [P] Persist job logs to files in `src/services/job_manager.py`
+*** End Patch
+2025-12-27T13:37:13.961431Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+-Open http://127.0.0.1:8000 to submit jobs and view status.
+-The UI shows progress, last step, output preview/download, and Ollama status.
++Open http://127.0.0.1:8000 to submit jobs and view status.
++The UI auto-refreshes, shows a progress bar, last step, output preview/download,
++and Ollama status.
++
++Job logs are stored in `data/job_logs/` per job ID.
+*** End Patch
+2025-12-27T13:37:20.210822Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md
+@@
+-Open http://127.0.0.1:8000 to submit jobs and view status.
+-The UI shows progress, recent step, output preview/download, and Ollama status.
++Open http://127.0.0.1:8000 to submit jobs and view status.
++The UI auto-refreshes and shows a progress bar, recent step, output
++preview/download, and Ollama status.
++
++Job logs are stored in `data/job_logs/` per job ID.
+*** End Patch
+2025-12-27T13:37:22.617061Z  WARN failed to paste image: no image on clipboard: The clipboard contents were not available in the requested format or the clipboard is empty.
+2025-12-27T13:37:41.346103Z  INFO spawning ghost snapshot task
+2025-12-27T13:37:41.512020Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:37:41.512109Z  INFO ghost commit captured: 125d470ef0b340950a9c7126076aaac31e9a6411
+2025-12-27T13:37:41.512124Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:37:48.576776Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+-  model_name: "gpt-oss:120B-cloud"
++  model_name: "ministral-3:3b-cloud"
+*** End Patch
+2025-12-27T13:38:01.330728Z  INFO spawning ghost snapshot task
+2025-12-27T13:38:01.438173Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:38:01.438217Z  INFO ghost commit captured: 0339b925c906373ee96b3678122927730934e265
+2025-12-27T13:38:01.438235Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:38:09.263064Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book.epub --format epub --output /tmp/test-book-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":300000}
+2025-12-27T13:40:11.649989Z  INFO interrupt received: abort current task, if any

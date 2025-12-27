@@ -9,20 +9,20 @@ project:
 # 1. 本地 LLM 配置 (Ollama / Local API)
 # ------------------------------------------
 llm_settings:
-  model_name: "gpt-oss:120B-cloud"
-  base_url: "http://localhost:11434/v1" # Ollama 默認路徑
+  model_name: "ministral-3:3b-cloud"
+  base_url: "http://127.0.0.1:11434" # Ollama 默認路徑
   temperature: 0.1                      # 低隨機性，確保事實準確
   num_ctx: 8192                         # 上下文窗口限制
   top_p: 0.9
   repeat_penalty: 1.1
   max_tokens: 2048                      # 單次生成最大長度
-  timeout: 180                          # 單次 API 調用超時 (秒)
+  timeout: 300                          # 單次 API 調用超時 (秒)
 
 # ------------------------------------------
 # 2. 通用書籍提取與切分策略 (ETL Strategy)
 # ------------------------------------------
 extraction:
-  supported_formats: [".pdf", ".epub", ".docx", ".txt", ".md"]
+  supported_formats: [".pdf", ".epub", ".txt"]
   auto_clean: true                      # 自動移除頁碼與重複腳註
   ocr_enabled: false                    # 若為掃描版 PDF 需開啟 (需額外套件)
 
@@ -75,3 +75,10 @@ vector_store:
   persist_dir: "./data/vector_db"
   embedding_model: "BAAI/bge-m3"        # 中英日多語言通用模型
   collection_name_prefix: "arch_v1_"
+
+# ------------------------------------------
+# 6. 管理介面 (Admin UI)
+# ------------------------------------------
+ui:
+  host: "127.0.0.1"
+  port: 8000

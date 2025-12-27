@@ -54,3 +54,13 @@
 {"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766841137,"text":"請檢視"}
 {"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766841151,"text":"請檢視程式碼輸出的結果"}
 {"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766841206,"text":"1 接入　ollama https:127.0.0.1:11434"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766841541,"text":"請測試"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766841584,"text":"請執行　同時請把 configs/config.yaml 的 base_url 改回：\n\n  http://127.0.0.1:11434/v1"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766841618,"text":"請再次測試"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766841796,"text":"請把逾時設定改為300秒"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842116,"text":"可以在每一步動作都給螢幕回饋嘛？"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842123,"text":"我想要有一個控制界面！同時提供CLI and 管理視窗來操作這個程式碼！　請把所有的變更寫入對應的文件中！並且增加Readme.md 的文件"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842391,"text":"螢幕回饋我需要詳細板的　UI 同時應該要呈現1-3  的資訊！包含目前與ollama 連線的狀況"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842547,"text":"再加「進度條百分比動畫」「工作紀錄保留到檔案」「UI 自動刷新」"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842661,"text":"模型改用　ministral-3:3b-cloud"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842681,"text":"請測試"}
