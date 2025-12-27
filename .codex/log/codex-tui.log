@@ -349,3 +349,618 @@
 2025-12-27T08:43:32.666974Z  INFO ghost snapshot gate marked ready
 2025-12-27T08:43:38.660353Z  INFO ToolCall: shell_command {"command":"git branch --list","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
 2025-12-27T08:43:41.834231Z  INFO ToolCall: shell_command {"command":"git status -sb","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:48:26.156589Z  INFO spawning ghost snapshot task
+2025-12-27T08:48:26.209582Z  INFO ghost snapshot blocking task finished
+2025-12-27T08:48:26.209622Z  INFO ghost commit captured: 304aa96053ef2d1a9a16f7b3103b59c6de879110
+2025-12-27T08:48:26.209632Z  INFO ghost snapshot gate marked ready
+2025-12-27T08:48:29.772981Z  INFO ToolCall: shell_command {"command":"git status -sb","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:48:40.652151Z  INFO spawning ghost snapshot task
+2025-12-27T08:48:40.692788Z  INFO ghost snapshot blocking task finished
+2025-12-27T08:48:40.692818Z  INFO ghost commit captured: 3718d9945696c6c26b0fd5b81f7bdd718178d1fe
+2025-12-27T08:48:40.692827Z  INFO ghost snapshot gate marked ready
+2025-12-27T08:48:42.878748Z  INFO ToolCall: shell_command {"command":"git checkout -b 001-universal-book-rag","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:48:45.118219Z  INFO ToolCall: shell_command {"command":".specify/scripts/bash/setup-plan.sh --json","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:48:49.124642Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:48:52.607133Z  INFO ToolCall: shell_command {"command":"ls /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:48:58.135043Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/.specify/memory/constitution.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:57:37.698690Z  INFO spawning ghost snapshot task
+2025-12-27T08:57:37.751332Z  INFO ghost snapshot blocking task finished
+2025-12-27T08:57:37.751375Z  INFO ghost commit captured: c32d0f7b0fa1f80bf3e3c5f0f1be926f5838c36c
+2025-12-27T08:57:37.751385Z  INFO ghost snapshot gate marked ready
+2025-12-27T08:57:43.226219Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' .specify/memory/constitution.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:58:20.818155Z  INFO spawning ghost snapshot task
+2025-12-27T08:58:20.872904Z  INFO ghost snapshot blocking task finished
+2025-12-27T08:58:20.872952Z  INFO ghost commit captured: 01331a4cd1b62fd3b32c6d179f0fab56cde846f2
+2025-12-27T08:58:20.872965Z  INFO ghost snapshot gate marked ready
+2025-12-27T08:58:29.204353Z  INFO ToolCall: update_plan {"explanation":"將先建立 spec.md，接著填完 plan.md 與 research/design 產出物，再更新 agent context。","plan":[{"step":"建立規格檔 spec.md（依憲章補齊使用者故事、需求、成功指標、輸出格式、隱私與測試要求）","status":"in_progress"},{"step":"填寫 plan.md（技術脈絡、憲章檢查、研究任務），並完成 research.md","status":"pending"},{"step":"完成 data-model.md、contracts/*、quickstart.md，更新 agent context，並重跑憲章檢查","status":"pending"}]}
+2025-12-27T08:58:33.095186Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:59:15.275405Z  WARN failed to paste image: no image on clipboard: The clipboard contents were not available in the requested format or the clipboard is empty.
+2025-12-27T08:59:27.880096Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md\n# Feature Specification: Universal Book-to-RAG Pipeline\n\n**Feature Branch**: `001-universal-book-rag`  \n**Created**: 2025-12-27  \n**Status**: Draft  \n**Input**: User description: \"建立一個全自動化的數據處理流水線，將非結構化書籍（PDF/EPub）轉化為具備高品質問答對與多維標籤的 RAG 專用知識庫。 - 高保真轉換：利用 120B 模型深度理解文本，確保文法與邏輯無損。 - 結構化輸出：自動生成包含問題、答案、應用場景、標籤、關聯詞的 JSON 數據。 - 本地化隱私：基於 Ollama 全本地運行，確保書籍版權與數據隱私。 - 自動化率：單本電子書處理人工干預次數 < 2 次。 - 幻覺率：產生的問答對與原文事實衝突率 < 1%。 - 通用性：支持至少 3 種常見電子書格式（PDF, EPUB, TXT）。\"\n\n## User Scenarios & Testing *(mandatory)*\n\n### User Story 1 - 端到端書籍轉換為 QA 與標籤 (Priority: P1)\n\n作為內容管理者，我希望將單本書籍自動轉換為高品質 QA 對與多維標籤，\n以便直接匯入 RAG 知識庫。\n\n**Why this priority**: 這是系統的核心價值輸出。\n\n**Independent Test**: 匯入一份 PDF/EPUB，產出 JSONL，且 QA 與原文一致。\n\n**Acceptance Scenarios**:\n\n1. **Given** 一份合法格式的 PDF 或 EPUB，**When** 執行管線，**Then** 產生\n   JSONL 並包含 question/answer/usage_scenario/tags/related_terms。\n2. **Given** 來源文本包含目錄與頁碼，**When** 執行清洗流程，**Then** 輸出\n   不包含廣告、頁碼與重複導航列內容。\n\n---\n\n### User Story 2 - 多格式支援與穩定切分 (Priority: P2)\n\n作為內容管理者，我希望 PDF/EPUB/TXT 都能被統一載入與切分，以便快速擴\n充資料來源。\n\n**Why this priority**: 通用性是成功指標之一，需先穩定實作。\n\n**Independent Test**: 對三種格式各自轉換一次，均能產生切分結果。\n\n**Acceptance Scenarios**:\n\n1. **Given** PDF/EPUB/TXT 任一格式，**When** 使用 UniversalLoader，**Then**\n   取得結構化文本段落。\n2. **Given** 含有 Markdown 標題的文本，**When** 使用 SmartChunker，**Then**\n   以標題優先切分並維持 10% 重疊。\n\n---\n\n### User Story 3 - 向量化與查詢驗證 (Priority: P3)\n\n作為內容管理者，我希望將 QA 與標籤向量化並驗證檢索命中率，以確保 RAG\n品質。\n\n**Why this priority**: 向量化與驗證是管線可用性的最低保證。\n\n**Independent Test**: 匯入 ChromaDB 後，模擬查詢能命中關鍵 QA。\n\n**Acceptance Scenarios**:\n\n1. **Given** 已產出的 QA JSONL，**When** 向量化並寫入 ChromaDB，**Then**\n   以模擬提問可命中相關 QA。\n2. **Given** 成功建置集合，**When** 執行檢索驗證腳本，**Then** 回傳命中\n   率報告。\n\n### Edge Cases\n\n- 書籍含有大量腳註或版面噪音時如何處理？\n- 單段文字超過 1024 tokens 時如何分段與重試？\n\n## Requirements *(mandatory)*\n\n### Functional Requirements\n\n- **FR-001**: 系統 MUST 支援 PDF、EPUB、TXT 三種格式載入。\n- **FR-002**: 系統 MUST 提供統一的 `UniversalLoader` 介面輸入檔案路徑。\n- **FR-003**: 系統 MUST 依 Markdown 標題優先切分文本，長度 512-1024 tokens。\n- **FR-004**: 系統 MUST 在切分時保留約 10% 重疊以維持語意連續。\n- **FR-005**: 系統 MUST 清洗輸入內容並移除廣告、頁碼、導航列噪音。\n- **FR-006**: 系統 MUST 透過本地 Ollama 的 120B 模型產生 QA 對與標籤。\n- **FR-007**: 系統 MUST 輸出 JSONL，包含 question、answer、usage_scenario、\n  tags、related_terms 欄位。\n- **FR-008**: 系統 MUST 以 BGE-M3 進行向量化並寫入 ChromaDB collections。\n- **FR-009**: 系統 MUST 支援批次處理與重試機制以處理逾時。\n- **FR-010**: 系統 MUST 產出檢索命中率驗證報告。\n\n### Key Entities *(include if feature involves data)*\n\n- **Book**: 書籍檔案與其 metadata（格式、來源、章節結構）。\n- **DocumentChunk**: 切分後的文本段落，包含章節/頁碼/位址。\n- **QAPair**: 問答對與應用場景、標籤、關聯詞。\n- **EmbeddingRecord**: 向量化結果與對應的 QAPair 參照。\n- **Collection**: ChromaDB 集合與書籍/語系關聯。\n\n## Output Schema *(mandatory for data generation features)*\n\n- **Required Fields**: question, answer, usage_scenario, tags, related_terms\n- **Optional Fields**: source_pages, section_path, confidence\n- **Schema Version**: 1.0.0\n\n## Privacy & Execution Constraints *(mandatory)*\n\n- **Execution**: 全程本地執行，透過 Ollama，本流程不得對外呼叫內容服務。\n- **Data Handling**: 原始文本僅限本地暫存與處理，日誌不得保存原文全文。\n\n## Testing & Quality Gates *(mandatory)*\n\n- **Required Tests**: unit, integration, contract\n- **Fail-First Expectation**: yes\n- **Lint/Format**: 使用 repository defaults\n- **Reproducibility Notes**: 記錄模型版本、依賴版本、資料集雜湊與隨機種子\n\n## Success Criteria *(mandatory)*\n\n### Measurable Outcomes\n\n- **SC-001**: 單本電子書處理人工干預次數 < 2 次。\n- **SC-002**: 產生的問答對與原文事實衝突率 < 1%。\n- **SC-003**: 支援至少 3 種常見格式（PDF, EPUB, TXT）。\n- **SC-004**: 檢索驗證腳本命中率 >= 80% 於抽樣問題集。\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T08:59:32.180250Z  INFO ToolCall: update_plan {"plan":[{"step":"建立規格檔 spec.md（依憲章補齊使用者故事、需求、成功指標、輸出格式、隱私與測試要求）","status":"completed"},{"step":"填寫 plan.md（技術脈絡、憲章檢查、研究任務），並完成 research.md","status":"in_progress"},{"step":"完成 data-model.md、contracts/*、quickstart.md，更新 agent context，並重跑憲章檢查","status":"pending"}]}
+2025-12-27T09:00:02.592964Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md
+@@
+-# Implementation Plan: [FEATURE]
++# Implementation Plan: Universal Book-to-RAG Pipeline
+ 
+-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
++**Branch**: `001-universal-book-rag` | **Date**: 2025-12-27 | **Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
++**Input**: Feature specification from `/home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md`
+@@
+-## Summary
+-
+-[Extract from feature spec: primary requirement + technical approach from research]
++## Summary
++
++Build a fully local pipeline that ingests PDF/EPUB/TXT, cleans and chunks text,
++generates QA pairs with tags via Ollama 120B, stores vectors in ChromaDB, and
++exports JSONL for downstream RAG ingestion. The approach uses Python 3.11 with
++LangChain orchestration, Unstructured parsing, BGE-M3 embeddings, and explicit
++quality gates for fidelity and hallucination rate.
+@@
+-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+-**Project Type**: [single/web/mobile - determines source structure]  
+-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
++**Language/Version**: Python 3.11  
++**Primary Dependencies**: LangChain, Unstructured, ChromaDB, Ollama API client, BGE-M3  
++**Storage**: Local filesystem + ChromaDB collections  
++**Testing**: pytest  
++**Target Platform**: Linux (local workstation/server)  
++**Project Type**: single  
++**Performance Goals**: automation < 2 manual interventions per book; hallucination < 1%  
++**Constraints**: offline/local-only execution; no external content calls  
++**Scale/Scope**: single-book batch processing; support PDF/EPUB/TXT
+@@
+ - Semver impact assessed; breaking changes include migration notes.
++
++**Gate Evaluation**: PASS (all gates satisfied by spec and planned artifacts).
+@@
+-```text
+-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
++```text
+ src/
+ ├── models/
+ ├── services/
+ ├── cli/
+ └── lib/
+@@
+-tests/
+-├── contract/
+-├── integration/
+-└── unit/
+-
+-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+-backend/
+-├── src/
+-│   ├── models/
+-│   ├── services/
+-│   └── api/
+-└── tests/
+-
+-frontend/
+-├── src/
+-│   ├── components/
+-│   ├── pages/
+-│   └── services/
+-└── tests/
+-
+-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+-api/
+-└── [same as backend above]
+-
+-ios/ or android/
+-└── [platform-specific structure: feature modules, UI flows, platform tests]
++tests/
++├── contract/
++├── integration/
++└── unit/
+ ```
+ 
+-**Structure Decision**: [Document the selected structure and reference the real
+-directories captured above]
++**Structure Decision**: Single-project structure with `src/` and `tests/` at the
++repository root.
+*** End Patch
+2025-12-27T09:00:19.283627Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/research.md\n# Phase 0 Research: Universal Book-to-RAG Pipeline\n\n**Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md\n**Plan**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md\n\n## Research Tasks\n\n- Task: \"Research Python version for local LLM pipelines\"\n- Task: \"Find best practices for LangChain orchestration in ETL pipelines\"\n- Task: \"Find best practices for Unstructured parsing of PDF/EPUB\"\n- Task: \"Find best practices for ChromaDB collections and metadata\"\n- Task: \"Find best practices for Ollama local LLM batching and retries\"\n- Task: \"Find best practices for BGE-M3 embeddings in bilingual corpora\"\n- Task: \"Research chunk sizing and overlap for QA generation\"\n\n## Findings\n\n### Python Runtime\n\n- Decision: Python 3.11\n- Rationale: Mature ecosystem for LangChain/Unstructured, good asyncio support.\n- Alternatives considered: Python 3.10, Python 3.12\n\n### Orchestration\n\n- Decision: LangChain for pipeline orchestration and prompt templates.\n- Rationale: Integrates with local LLMs, structured output helpers, and retriers.\n- Alternatives considered: LlamaIndex, custom pipeline\n\n### Parsing/ETL\n\n- Decision: Unstructured for PDF/EPUB/TXT ingestion and cleaning.\n- Rationale: Handles noisy documents and preserves structural hints for chunking.\n- Alternatives considered: pdfminer + ebooklib, tika\n\n### Chunking Strategy\n\n- Decision: Markdown heading-first chunking with 512-1024 token limits and 10% overlap.\n- Rationale: Preserves semantic hierarchy while controlling context size for 120B.\n- Alternatives considered: fixed-size chunking, sentence-only chunking\n\n### Local LLM Execution\n\n- Decision: Ollama local runtime with async batching and retry on timeout.\n- Rationale: Meets local-only privacy constraint and supports 120B model usage.\n- Alternatives considered: remote API hosted models, vLLM local server\n\n### Embeddings & Storage\n\n- Decision: BGE-M3 embeddings with ChromaDB collections per book.\n- Rationale: BGE-M3 supports bilingual corpora; ChromaDB is local and lightweight.\n- Alternatives considered: E5, FAISS, SQLite + custom index\n\n### Output Schema\n\n- Decision: JSONL with fields question, answer, usage_scenario, tags, related_terms.\n- Rationale: Aligns with constitution and enables downstream indexing.\n- Alternatives considered: nested JSON per chapter, CSV\n\n### Quality Validation\n\n- Decision: Add retrieval hit-rate script and hallucination sampling checks.\n- Rationale: Directly measures success metrics and fidelity requirements.\n- Alternatives considered: manual QA-only sampling\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:00:32.085983Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/data-model.md\n# Data Model: Universal Book-to-RAG Pipeline\n\n**Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md\n\n## Entities\n\n### Book\n\n- **Fields**: id, title, source_path, format, language, ingested_at\n- **Validation**: format MUST be one of PDF/EPUB/TXT; source_path MUST exist locally.\n- **Relationships**: has many DocumentChunk; has one Collection.\n\n### DocumentChunk\n\n- **Fields**: id, book_id, content, section_path, page_range, token_count, order_index\n- **Validation**: token_count MUST be 512-1024 except final chunk; overlap ~10%.\n- **Relationships**: belongs to Book; has many QAPair.\n\n### QAPair\n\n- **Fields**: id, chunk_id, question, answer, usage_scenario, tags, related_terms,\n  confidence\n- **Validation**: question/answer MUST be grounded in chunk content; tags non-empty.\n- **Relationships**: belongs to DocumentChunk; has one EmbeddingRecord.\n\n### EmbeddingRecord\n\n- **Fields**: id, qa_id, vector, model_name, model_version, created_at\n- **Validation**: model_name MUST be BGE-M3; vector size MUST match embedding model.\n- **Relationships**: belongs to QAPair; belongs to Collection.\n\n### Collection\n\n- **Fields**: id, book_id, name, locale, created_at\n- **Validation**: name MUST be unique per book; locale optional.\n- **Relationships**: belongs to Book; has many EmbeddingRecord.\n\n## State Transitions\n\n- **Book**: created -> ingested -> processed -> validated -> exported\n- **DocumentChunk**: created -> cleaned -> chunked -> queued -> processed\n- **QAPair**: generated -> validated -> indexed\n\n## Validation Rules\n\n- Hallucination sampling MUST keep conflicts < 1% (SC-002).\n- Retrieval hit-rate MUST be >= 80% for validation queries (SC-004).\n- Local-only processing MUST be enforced for all states.\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:00:37.305959Z  INFO ToolCall: shell_command {"command":"mkdir -p /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/contracts","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:00:56.250440Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/contracts/openapi.yaml\nopenapi: 3.0.3\ninfo:\n  title: Universal Book-to-RAG Pipeline API\n  version: 1.0.0\nservers:\n  - url: http://localhost:8000\npaths:\n  /books:\n    post:\n      summary: Register a book for processing\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/BookCreateRequest'\n      responses:\n        '201':\n          description: Book registered\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Book'\n  /books/{book_id}/process:\n    post:\n      summary: Start processing a book\n      parameters:\n        - $ref: '#/components/parameters/BookId'\n      responses:\n        '202':\n          description: Processing started\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Job'\n  /jobs/{job_id}:\n    get:\n      summary: Get processing job status\n      parameters:\n        - $ref: '#/components/parameters/JobId'\n      responses:\n        '200':\n          description: Job status\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Job'\n  /books/{book_id}/export:\n    get:\n      summary: Export QA JSONL for a book\n      parameters:\n        - $ref: '#/components/parameters/BookId'\n      responses:\n        '200':\n          description: JSONL export URL\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/ExportResult'\n  /books/{book_id}/validate:\n    post:\n      summary: Run retrieval validation for a book\n      parameters:\n        - $ref: '#/components/parameters/BookId'\n      responses:\n        '200':\n          description: Validation report\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/ValidationReport'\ncomponents:\n  parameters:\n    BookId:\n      name: book_id\n      in: path\n      required: true\n      schema:\n        type: string\n    JobId:\n      name: job_id\n      in: path\n      required: true\n      schema:\n        type: string\n  schemas:\n    BookCreateRequest:\n      type: object\n      required:\n        - source_path\n        - format\n      properties:\n        source_path:\n          type: string\n          description: Absolute path to local book file\n        format:\n          type: string\n          enum: [PDF, EPUB, TXT]\n        title:\n          type: string\n    Book:\n      type: object\n      properties:\n        id:\n          type: string\n        title:\n          type: string\n        format:\n          type: string\n        source_path:\n          type: string\n        status:\n          type: string\n    Job:\n      type: object\n      properties:\n        id:\n          type: string\n        status:\n          type: string\n        started_at:\n          type: string\n          format: date-time\n        finished_at:\n          type: string\n          format: date-time\n    ExportResult:\n      type: object\n      properties:\n        jsonl_path:\n          type: string\n          description: Absolute path to JSONL output\n    ValidationReport:\n      type: object\n      properties:\n        hit_rate:\n          type: number\n          format: float\n        hallucination_rate:\n          type: number\n          format: float\n        sample_size:\n          type: integer\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:01:05.364065Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md\n# Quickstart: Universal Book-to-RAG Pipeline\n\n**Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md\n\n## Prerequisites\n\n- Python 3.11\n- Ollama running locally\n- Model available: `gpt-oss:120B-cloud`\n\n## Setup\n\n```bash\ncd /home/pigo/文件/python/PrimeArchive-120B\npython -m venv .venv\n. .venv/bin/activate\npip install -r requirements.txt\n```\n\n## Run Pipeline (Example)\n\n```bash\n# Example CLI (to be implemented)\npython -m src.cli.pipeline \\\n  --source /home/pigo/資料/books/example.pdf \\\n  --format PDF \\\n  --output /home/pigo/資料/outputs/example.jsonl\n```\n\n## Validate Retrieval\n\n```bash\npython -m src.cli.validate \\\n  --collection example \\\n  --report /home/pigo/資料/outputs/example_validation.json\n```\n\n## Expected Outputs\n\n- JSONL with fields: question, answer, usage_scenario, tags, related_terms\n- Validation report with hit_rate and hallucination_rate\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:01:13.762933Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md
+@@
+ **Gate Evaluation**: PASS (all gates satisfied by spec and planned artifacts).
+@@
+ **Structure Decision**: Single-project structure with `src/` and `tests/` at the
+ repository root.
++
++## Post-Design Constitution Check
++
++*Re-evaluated after Phase 1 design artifacts.*
++
++- Spec link verified and aligned with charter.
++- Output schema and privacy constraints documented.
++- Quality targets and validation steps included.
++- Reproducibility notes captured in spec and research.
++
++**Gate Evaluation**: PASS (no violations).
+*** End Patch
+2025-12-27T09:01:18.675187Z  INFO ToolCall: shell_command {"command":"/home/pigo/文件/python/PrimeArchive-120B/.specify/scripts/bash/update-agent-context.sh codex","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:01:25.637920Z  INFO ToolCall: update_plan {"plan":[{"step":"建立規格檔 spec.md（依憲章補齊使用者故事、需求、成功指標、輸出格式、隱私與測試要求）","status":"completed"},{"step":"填寫 plan.md（技術脈絡、憲章檢查、研究任務），並完成 research.md","status":"completed"},{"step":"完成 data-model.md、contracts/*、quickstart.md，更新 agent context，並重跑憲章檢查","status":"completed"}]}
+2025-12-27T09:01:45.435824Z  INFO spawning ghost snapshot task
+2025-12-27T09:01:45.497600Z  INFO ghost snapshot blocking task finished
+2025-12-27T09:01:45.497725Z  INFO ghost commit captured: 5a73bbb1dd09187364afd530f8d84a72e20b854e
+2025-12-27T09:01:45.497748Z  INFO ghost snapshot gate marked ready
+2025-12-27T09:01:49.906995Z  INFO ToolCall: shell_command {"command":"ls /home/pigo/文件/python/PrimeArchive-120B","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:01:52.775271Z  INFO ToolCall: shell_command {"command":"rg --files -g 'Schema.json'","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:01:57.382193Z  INFO ToolCall: shell_command {"command":"rg --files -g '*schema*.json'","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:02:02.198108Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/prompt_template.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:02:05.471599Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/config.yaml","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:04:01.874000Z  INFO spawning ghost snapshot task
+2025-12-27T09:04:01.933154Z  INFO ghost snapshot blocking task finished
+2025-12-27T09:04:01.933226Z  INFO ghost commit captured: 3487dbf3071ba963943279aed6adad3ed2a94926
+2025-12-27T09:04:01.933247Z  INFO ghost snapshot gate marked ready
+2025-12-27T09:04:11.122133Z  INFO ToolCall: shell_command {"command":"ls /home/pigo/文件/python/PrimeArchive-120B","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:04:15.215113Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/Schema.json","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:04:31.495764Z  INFO ToolCall: shell_command {"command":"mkdir -p /home/pigo/文件/python/PrimeArchive-120B/configs /home/pigo/文件/python/PrimeArchive-120B/prompts /home/pigo/文件/python/PrimeArchive-120B/schemas","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:04:37.127898Z  INFO ToolCall: shell_command {"command":"mv /home/pigo/文件/python/PrimeArchive-120B/config.yaml /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml\nmv /home/pigo/文件/python/PrimeArchive-120B/prompt_template.md /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md\nmv /home/pigo/文件/python/PrimeArchive-120B/Schema.json /home/pigo/文件/python/PrimeArchive-120B/schemas/Schema.json","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:04:44.192893Z  INFO ToolCall: shell_command {"command":"sed -n '1,240p' /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:05:18.600505Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml\n# PrimeArchive-120B: 通用書籍轉換框架配置文件\n\nproject:\n  name: \"PrimeArchive-120B\"\n  version: \"2.0.0-universal\"\n  description: \"Automated Book-to-RAG Knowledge Synthesis\"\n\n# ------------------------------------------\n# 1. 本地 LLM 配置 (Ollama / Local API)\n# ------------------------------------------\nllm_settings:\n  model_name: \"gpt-oss:120B-cloud\"\n  base_url: \"http://localhost:11434/v1\" # Ollama 默認路徑\n  temperature: 0.1                      # 低隨機性，確保事實準確\n  num_ctx: 8192                         # 上下文窗口限制\n  top_p: 0.9\n  repeat_penalty: 1.1\n  max_tokens: 2048                      # 單次生成最大長度\n  timeout: 180                          # 單次 API 調用超時 (秒)\n\n# ------------------------------------------\n# 2. 通用書籍提取與切分策略 (ETL Strategy)\n# ------------------------------------------\nextraction:\n  supported_formats: [\".pdf\", \".epub\", \".docx\", \".txt\", \".md\"]\n  auto_clean: true                      # 自動移除頁碼與重複腳註\n  ocr_enabled: false                    # 若為掃描版 PDF 需開啟 (需額外套件)\n\nchunking:\n  # 預設通用切分邏輯\n  default:\n    method: \"markdown\"                 # 依 Markdown 標題層級優先切分\n    size: 1000                          # 字符數上限\n    overlap: 100                        # 段落重疊區間\n\n  # 領域自適應預設 (Domain Presets)\n  domain_presets:\n    technical:                          # 技術手冊/教材\n      size: 800\n      overlap: 150\n    literature:                         # 小說/敘事\n      size: 1500\n      overlap: 200\n    legal:                              # 條文/法律\n      size: 600\n      overlap: 50\n\n# ------------------------------------------\n# 3. 數據契約規格 (Data Schema Enforcement)\n# ------------------------------------------\noutput_schema:\n  enforce_json: true                    # 強制 LLM 輸出 JSON\n  fields:\n    - \"concept\"                         # 核心概念\n    - \"description\"                     # 知識描述\n    - \"application\"                     # 實作/場景\n    - \"tags\"                            # 標籤\n    - \"confidence\"                      # 置信度 (0.0 - 1.0)\n  export_format: \"jsonl\"                # 適合大型向量庫導入\n\n# ------------------------------------------\n# 4. 資源監控與錯誤恢復 (Reliability)\n# ------------------------------------------\nreliability:\n  retry_limit: 3                        # 生成失敗重試次數\n  checkpoint_interval: 10               # 每處理 10 個 Chunk 保存一次進度\n  vram_protection: 0.90                 # 顯存佔用超過 90% 時自動排隊等待\n  error_handling: \"skip_and_log\"        # 遇錯時跳過並記錄，不中斷全程\n\n# ------------------------------------------\n# 5. 向量庫儲存配置 (Vector Store)\n# ------------------------------------------\nvector_store:\n  provider: \"chromadb\"\n  persist_dir: \"./data/vector_db\"\n  embedding_model: \"BAAI/bge-m3\"        # 中英日多語言通用模型\n  collection_name_prefix: \"arch_v1_\"\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:05:24.948731Z  INFO ToolCall: shell_command {"command":"ls -l /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:05:47.212757Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml\n# PrimeArchive-120B: 通用書籍轉換框架配置文件\n\nproject:\n  name: \"PrimeArchive-120B\"\n  version: \"2.0.0-universal\"\n  description: \"Automated Book-to-RAG Knowledge Synthesis\"\n\n# ------------------------------------------\n# 1. 本地 LLM 配置 (Ollama / Local API)\n# ------------------------------------------\nllm_settings:\n  model_name: \"gpt-oss:120B-cloud\"\n  base_url: \"http://localhost:11434/v1\" # Ollama 默認路徑\n  temperature: 0.1                      # 低隨機性，確保事實準確\n  num_ctx: 8192                         # 上下文窗口限制\n  top_p: 0.9\n  repeat_penalty: 1.1\n  max_tokens: 2048                      # 單次生成最大長度\n  timeout: 180                          # 單次 API 調用超時 (秒)\n\n# ------------------------------------------\n# 2. 通用書籍提取與切分策略 (ETL Strategy)\n# ------------------------------------------\nextraction:\n  supported_formats: [\".pdf\", \".epub\", \".docx\", \".txt\", \".md\"]\n  auto_clean: true                      # 自動移除頁碼與重複腳註\n  ocr_enabled: false                    # 若為掃描版 PDF 需開啟 (需額外套件)\n\nchunking:\n  # 預設通用切分邏輯\n  default:\n    method: \"markdown\"                 # 依 Markdown 標題層級優先切分\n    size: 1000                          # 字符數上限\n    overlap: 100                        # 段落重疊區間\n\n  # 領域自適應預設 (Domain Presets)\n  domain_presets:\n    technical:                          # 技術手冊/教材\n      size: 800\n      overlap: 150\n    literature:                         # 小說/敘事\n      size: 1500\n      overlap: 200\n    legal:                              # 條文/法律\n      size: 600\n      overlap: 50\n\n# ------------------------------------------\n# 3. 數據契約規格 (Data Schema Enforcement)\n# ------------------------------------------\noutput_schema:\n  enforce_json: true                    # 強制 LLM 輸出 JSON\n  fields:\n    - \"concept\"                         # 核心概念\n    - \"description\"                     # 知識描述\n    - \"application\"                     # 實作/場景\n    - \"tags\"                            # 標籤\n    - \"confidence\"                      # 置信度 (0.0 - 1.0)\n  export_format: \"jsonl\"                # 適合大型向量庫導入\n\n# ------------------------------------------\n# 4. 資源監控與錯誤恢復 (Reliability)\n# ------------------------------------------\nreliability:\n  retry_limit: 3                        # 生成失敗重試次數\n  checkpoint_interval: 10               # 每處理 10 個 Chunk 保存一次進度\n  vram_protection: 0.90                 # 顯存佔用超過 90% 時自動排隊等待\n  error_handling: \"skip_and_log\"        # 遇錯時跳過並記錄，不中斷全程\n\n# ------------------------------------------\n# 5. 向量庫儲存配置 (Vector Store)\n# ------------------------------------------\nvector_store:\n  provider: \"chromadb\"\n  persist_dir: \"./data/vector_db\"\n  embedding_model: \"BAAI/bge-m3\"        # 中英日多語言通用模型\n  collection_name_prefix: \"arch_v1_\"\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要覆寫 root 擁有的 /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml 以合併設定。"}
+2025-12-27T09:08:59.808283Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/configs/config.merged.yaml\n# PrimeArchive-120B: 通用書籍轉換框架配置文件\n\nproject:\n  name: \"PrimeArchive-120B\"\n  version: \"2.0.0-universal\"\n  description: \"Automated Book-to-RAG Knowledge Synthesis\"\n\n# ------------------------------------------\n# 1. 本地 LLM 配置 (Ollama / Local API)\n# ------------------------------------------\nllm_settings:\n  model_name: \"gpt-oss:120B-cloud\"\n  base_url: \"http://localhost:11434/v1\" # Ollama 默認路徑\n  temperature: 0.1                      # 低隨機性，確保事實準確\n  num_ctx: 8192                         # 上下文窗口限制\n  top_p: 0.9\n  repeat_penalty: 1.1\n  max_tokens: 2048                      # 單次生成最大長度\n  timeout: 180                          # 單次 API 調用超時 (秒)\n\n# ------------------------------------------\n# 2. 通用書籍提取與切分策略 (ETL Strategy)\n# ------------------------------------------\nextraction:\n  supported_formats: [\".pdf\", \".epub\", \".docx\", \".txt\", \".md\"]\n  auto_clean: true                      # 自動移除頁碼與重複腳註\n  ocr_enabled: false                    # 若為掃描版 PDF 需開啟 (需額外套件)\n\nchunking:\n  # 預設通用切分邏輯\n  default:\n    method: \"markdown\"                 # 依 Markdown 標題層級優先切分\n    size: 1000                          # 字符數上限\n    overlap: 100                        # 段落重疊區間\n\n  # 領域自適應預設 (Domain Presets)\n  domain_presets:\n    technical:                          # 技術手冊/教材\n      size: 800\n      overlap: 150\n    literature:                         # 小說/敘事\n      size: 1500\n      overlap: 200\n    legal:                              # 條文/法律\n      size: 600\n      overlap: 50\n\n# ------------------------------------------\n# 3. 數據契約規格 (Data Schema Enforcement)\n# ------------------------------------------\noutput_schema:\n  enforce_json: true                    # 強制 LLM 輸出 JSON\n  fields:\n    - \"concept\"                         # 核心概念\n    - \"description\"                     # 知識描述\n    - \"application\"                     # 實作/場景\n    - \"tags\"                            # 標籤\n    - \"confidence\"                      # 置信度 (0.0 - 1.0)\n  export_format: \"jsonl\"                # 適合大型向量庫導入\n\n# ------------------------------------------\n# 4. 資源監控與錯誤恢復 (Reliability)\n# ------------------------------------------\nreliability:\n  retry_limit: 3                        # 生成失敗重試次數\n  checkpoint_interval: 10               # 每處理 10 個 Chunk 保存一次進度\n  vram_protection: 0.90                 # 顯存佔用超過 90% 時自動排隊等待\n  error_handling: \"skip_and_log\"        # 遇錯時跳過並記錄，不中斷全程\n\n# ------------------------------------------\n# 5. 向量庫儲存配置 (Vector Store)\n# ------------------------------------------\nvector_store:\n  provider: \"chromadb\"\n  persist_dir: \"./data/vector_db\"\n  embedding_model: \"BAAI/bge-m3\"        # 中英日多語言通用模型\n  collection_name_prefix: \"arch_v1_\"\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:09:18.751954Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:09:25.914959Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md
+@@
+-4. **輸出格式**：必須嚴格遵守 JSON 格式。
++4. **輸出格式**：必須嚴格遵守 JSON 格式與欄位定義。
+@@
+-JSON 應包含：問題、答案、應用場景、標籤（list）、關聯詞（list）。
++JSON 應包含：concept、description、application、tags（list）、
++type（concept|procedure|case_study）、reference。
+ """
+*** End Patch
+2025-12-27T09:09:28.979111Z  INFO ToolCall: shell_command {"command":"ls -l /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:09:48.631977Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+-1. **Given** 一份合法格式的 PDF 或 EPUB，**When** 執行管線，**Then** 產生
+-   JSONL 並包含 question/answer/usage_scenario/tags/related_terms。
++1. **Given** 一份合法格式的 PDF/EPUB/TXT/DOCX/MD，**When** 執行管線，**Then** 產生
++   JSONL 並包含 concept/description/application/tags/type/reference。
+@@
+-1. **Given** PDF/EPUB/TXT 任一格式，**When** 使用 UniversalLoader，**Then**
++1. **Given** PDF/EPUB/TXT/DOCX/MD 任一格式，**When** 使用 UniversalLoader，**Then**
+@@
+-- **FR-001**: 系統 MUST 支援 PDF、EPUB、TXT 三種格式載入。
++- **FR-001**: 系統 MUST 支援 PDF、EPUB、TXT、DOCX、MD 格式載入。
+@@
+-- **FR-003**: 系統 MUST 依 Markdown 標題優先切分文本，長度 512-1024 tokens。
+-- **FR-004**: 系統 MUST 在切分時保留約 10% 重疊以維持語意連續。
++- **FR-003**: 系統 MUST 依 Markdown 標題優先切分文本，預設 1000 字符上限。
++- **FR-004**: 系統 MUST 在切分時保留 100 字符重疊以維持語意連續。
+@@
+-- **FR-007**: 系統 MUST 輸出 JSONL，包含 question、answer、usage_scenario、
+-  tags、related_terms 欄位。
++- **FR-007**: 系統 MUST 輸出 JSONL，包含 concept、description、application、
++  tags、type、reference 欄位。
+@@
+-- **QAPair**: 問答對與應用場景、標籤、關聯詞。
++- **KnowledgeUnit**: 核心概念、描述、應用場景、標籤、類型、參考索引。
+@@
+-- **EmbeddingRecord**: 向量化結果與對應的 QAPair 參照。
++- **EmbeddingRecord**: 向量化結果與對應的 KnowledgeUnit 參照。
+@@
+-- **Required Fields**: question, answer, usage_scenario, tags, related_terms
+-- **Optional Fields**: source_pages, section_path, confidence
++- **Required Fields**: concept, description, application, tags, type, reference
++- **Optional Fields**: confidence, source_pages, section_path
+*** End Patch
+2025-12-27T09:10:03.497180Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md
+@@
+-Build a fully local pipeline that ingests PDF/EPUB/TXT, cleans and chunks text,
+-generates QA pairs with tags via Ollama 120B, stores vectors in ChromaDB, and
+-exports JSONL for downstream RAG ingestion. The approach uses Python 3.11 with
+-LangChain orchestration, Unstructured parsing, BGE-M3 embeddings, and explicit
+-quality gates for fidelity and hallucination rate.
++Build a fully local pipeline that ingests PDF/EPUB/TXT/DOCX/MD, cleans and
++chunks text, generates structured knowledge units via Ollama 120B, stores
++vectors in ChromaDB, and exports JSONL for downstream RAG ingestion. Output
++fields follow `Schema.json` (concept/description/application/tags/type/reference)
++and the prompt template in `prompts/prompt_template.md`. The approach uses
++Python 3.11 with LangChain orchestration, Unstructured parsing, BGE-M3 embeddings,
++and explicit quality gates for fidelity and hallucination rate.
+@@
+-**Primary Dependencies**: LangChain, Unstructured, ChromaDB, Ollama API client, BGE-M3  
++**Primary Dependencies**: LangChain, Unstructured, ChromaDB, Ollama API client, BGE-M3  
+ **Storage**: Local filesystem + ChromaDB collections  
+ **Testing**: pytest  
+ **Target Platform**: Linux (local workstation/server)  
+ **Project Type**: single  
+-**Performance Goals**: automation < 2 manual interventions per book; hallucination < 1%  
+-**Constraints**: offline/local-only execution; no external content calls  
+-**Scale/Scope**: single-book batch processing; support PDF/EPUB/TXT
++**Performance Goals**: automation < 2 manual interventions per book; hallucination < 1%  
++**Constraints**: offline/local-only execution; no external content calls  
++**Scale/Scope**: single-book batch processing; support PDF/EPUB/TXT/DOCX/MD
+@@
+-- Output schema defined (question, answer, usage scenario, tags, related terms).
++- Output schema defined (concept, description, application, tags, type, reference).
+ - Local-only execution confirmed (Ollama; no external content calls).
+ - Reproducibility plan captured (dependency versions, dataset hashes, seeds).
+ - Semver impact assessed; breaking changes include migration notes.
+*** End Patch
+2025-12-27T09:10:11.817120Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md
+@@
+ **Testing**: pytest  
+ **Target Platform**: Linux (local workstation/server)  
+ **Project Type**: single  
+ **Performance Goals**: automation < 2 manual interventions per book; hallucination < 1%  
+ **Constraints**: offline/local-only execution; no external content calls  
+ **Scale/Scope**: single-book batch processing; support PDF/EPUB/TXT/DOCX/MD
++
++**Config**: /home/pigo/文件/python/PrimeArchive-120B/configs/config.merged.yaml  
++**Prompt Template**: /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md  
++**Schema**: /home/pigo/文件/python/PrimeArchive-120B/schemas/Schema.json
+*** End Patch
+2025-12-27T09:10:20.932848Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/research.md
+@@
+-- Task: "Find best practices for Unstructured parsing of PDF/EPUB"
++- Task: "Find best practices for Unstructured parsing of PDF/EPUB/DOCX/MD/TXT"
+@@
+-### Parsing/ETL
++### Parsing/ETL
+ 
+-- Decision: Unstructured for PDF/EPUB/TXT ingestion and cleaning.
+-- Rationale: Handles noisy documents and preserves structural hints for chunking.
++- Decision: Unstructured for PDF/EPUB/TXT/DOCX/MD ingestion and cleaning.
++- Rationale: Handles noisy documents and preserves structural hints for chunking.
+@@
+-### Output Schema
++### Output Schema
+ 
+-- Decision: JSONL with fields question, answer, usage_scenario, tags, related_terms.
+-- Rationale: Aligns with constitution and enables downstream indexing.
+-- Alternatives considered: nested JSON per chapter, CSV
++- Decision: JSONL with fields concept, description, application, tags, type, reference.
++- Rationale: Aligns with Schema.json and prompt template requirements.
++- Alternatives considered: nested JSON per chapter, CSV
+*** End Patch
+2025-12-27T09:10:30.414381Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/data-model.md
+@@
+-### DocumentChunk
++### DocumentChunk
+@@
+-- **Validation**: token_count MUST be 512-1024 except final chunk; overlap ~10%.
+-- **Relationships**: belongs to Book; has many QAPair.
++- **Validation**: token_count MUST align to ~1000 characters; overlap 100 chars.
++- **Relationships**: belongs to Book; has many KnowledgeUnit.
+ 
+-### QAPair
++### KnowledgeUnit
+ 
+-- **Fields**: id, chunk_id, question, answer, usage_scenario, tags, related_terms,
+-  confidence
+-- **Validation**: question/answer MUST be grounded in chunk content; tags non-empty.
+-- **Relationships**: belongs to DocumentChunk; has one EmbeddingRecord.
++- **Fields**: id, chunk_id, concept, description, application, tags, type,
++  reference, confidence
++- **Validation**: content MUST be grounded in chunk content; tags non-empty.
++- **Relationships**: belongs to DocumentChunk; has one EmbeddingRecord.
+@@
+-### EmbeddingRecord
++### EmbeddingRecord
+ 
+-- **Fields**: id, qa_id, vector, model_name, model_version, created_at
++- **Fields**: id, knowledge_unit_id, vector, model_name, model_version, created_at
+@@
+-- **Relationships**: belongs to QAPair; belongs to Collection.
++- **Relationships**: belongs to KnowledgeUnit; belongs to Collection.
+@@
+-- **QAPair**: generated -> validated -> indexed
++- **KnowledgeUnit**: generated -> validated -> indexed
+*** End Patch
+2025-12-27T09:10:40.655790Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/contracts/openapi.yaml
+@@
+     ExportResult:
+       type: object
+       properties:
+         jsonl_path:
+           type: string
+           description: Absolute path to JSONL output
++        sample_unit:
++          $ref: '#/components/schemas/KnowledgeUnit'
++    KnowledgeUnit:
++      type: object
++      required:
++        - concept
++        - description
++        - application
++        - tags
++        - type
++        - reference
++      properties:
++        id:
++          type: string
++        concept:
++          type: string
++        description:
++          type: string
++        application:
++          type: string
++        tags:
++          type: array
++          items:
++            type: string
++        type:
++          type: string
++          enum: [concept, procedure, case_study]
++        reference:
++          type: string
++        confidence:
++          type: number
++          format: float
+*** End Patch
+2025-12-27T09:10:47.424834Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md
+@@
+-## Setup
++## Setup
+@@
+-## Run Pipeline (Example)
++## Run Pipeline (Example)
+@@
+-  --format PDF \
++  --format PDF \
+   --output /home/pigo/資料/outputs/example.jsonl
+@@
+-## Expected Outputs
+-
+-- JSONL with fields: question, answer, usage_scenario, tags, related_terms
+-- Validation report with hit_rate and hallucination_rate
++## Config & Schema
++
++- Config: /home/pigo/文件/python/PrimeArchive-120B/configs/config.merged.yaml
++- Prompt: /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md
++- Schema: /home/pigo/文件/python/PrimeArchive-120B/schemas/Schema.json
++
++## Expected Outputs
++
++- JSONL with fields: concept, description, application, tags, type, reference
++- Validation report with hit_rate and hallucination_rate
+*** End Patch
+2025-12-27T09:10:54.770431Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+-- **SC-003**: 支援至少 3 種常見格式（PDF, EPUB, TXT）。
++- **SC-003**: 支援至少 5 種常見格式（PDF, EPUB, TXT, DOCX, MD）。
+*** End Patch
+2025-12-27T09:11:07.795081Z  INFO ToolCall: shell_command {"command":"ls /home/pigo/文件/python/PrimeArchive-120B","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:11:28.876247Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+-作為內容管理者，我希望將單本書籍自動轉換為高品質 QA 對與多維標籤，
+-以便直接匯入 RAG 知識庫。
++作為內容管理者，我希望將單本書籍自動轉換為高品質知識單元與多維標籤，
++以便直接匯入 RAG 知識庫。
+@@
+-**Independent Test**: 匯入一份 PDF/EPUB，產出 JSONL，且 QA 與原文一致。
++**Independent Test**: 匯入一份 PDF/EPUB，產出 JSONL，且知識單元與原文一致。
+@@
+-作為內容管理者，我希望將 QA 與標籤向量化並驗證檢索命中率，以確保 RAG
++作為內容管理者，我希望將知識單元與標籤向量化並驗證檢索命中率，以確保 RAG
+@@
+-**Independent Test**: 匯入 ChromaDB 後，模擬查詢能命中關鍵 QA。
++**Independent Test**: 匯入 ChromaDB 後，模擬查詢能命中關鍵知識單元。
+@@
+-1. **Given** 已產出的 QA JSONL，**When** 向量化並寫入 ChromaDB，**Then**
+-   以模擬提問可命中相關 QA。
++1. **Given** 已產出的知識單元 JSONL，**When** 向量化並寫入 ChromaDB，**Then**
++   以模擬提問可命中相關知識單元。
+*** End Patch
+2025-12-27T09:11:36.352459Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/data-model.md
+@@
+-- **Fields**: id, book_id, content, section_path, page_range, token_count, order_index
+-- **Validation**: token_count MUST align to ~1000 characters; overlap 100 chars.
++- **Fields**: id, book_id, content, section_path, page_range, char_count, order_index
++- **Validation**: char_count MUST align to ~1000 characters; overlap 100 chars.
+*** End Patch
+2025-12-27T09:14:00.359121Z  INFO spawning ghost snapshot task
+2025-12-27T09:14:00.456510Z  INFO ghost snapshot blocking task finished
+2025-12-27T09:14:00.456642Z  INFO ghost commit captured: aa0234be6c8fa3fd9c83b425ea410848e064ce09
+2025-12-27T09:14:00.456654Z  INFO ghost snapshot gate marked ready
+2025-12-27T09:14:04.633973Z  INFO ToolCall: shell_command {"command":"cp /home/pigo/文件/python/PrimeArchive-120B/configs/config.merged.yaml /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:14:14.519742Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md\nSYSTEM_PROMPT = \"\"\"你是一位極致嚴謹的知識解構專家。\n你的任務是將提供的原始文本段落，轉化為 RAG 系統專用的結構化知識單元。\n\n請遵循以下規則：\n1. **忠於原文**：嚴禁虛構書中未提及的規則。\n2. **場景化**：為每個知識點設想一個真實的寫作或應用場景。\n3. **標籤化**：提取 3-5 個階層式的標籤（如：文法 > 動詞 > 時態）。\n4. **輸出格式**：必須嚴格遵守 JSON 格式與欄位定義。\n\"\"\"\n\nUSER_PROMPT_TEMPLATE = \"\"\"\n請處理以下文本段落：\n---\n{text_chunk}\n---\n\n輸出要求：\n請分析這段文本，提取出核心知識點並輸出為 JSON 格式。\nJSON 應包含：concept、description、application、tags（list）、\ntype（concept|procedure|case_study）、reference。\n\"\"\"\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:14:18.840149Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md
+@@
+-**Config**: /home/pigo/文件/python/PrimeArchive-120B/configs/config.merged.yaml  
++**Config**: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml  
+*** End Patch
+2025-12-27T09:14:23.058797Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Delete File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.merged.yaml
+*** End Patch
+2025-12-27T09:14:26.854258Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md
+@@
+-- Config: /home/pigo/文件/python/PrimeArchive-120B/configs/config.merged.yaml
++- Config: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+*** End Patch
+2025-12-27T09:15:00.599785Z  INFO spawning ghost snapshot task
+2025-12-27T09:15:00.664688Z  INFO ghost snapshot blocking task finished
+2025-12-27T09:15:00.664736Z  INFO ghost commit captured: d0ff2a1d5d90bf48db697ff97ff6ceff917b06b5
+2025-12-27T09:15:00.664748Z  INFO ghost snapshot gate marked ready
+2025-12-27T09:15:25.873313Z  INFO spawning ghost snapshot task
+2025-12-27T09:15:25.935687Z  INFO ghost snapshot blocking task finished
+2025-12-27T09:15:25.935759Z  INFO ghost commit captured: 12999b33198ebc5cd05280ac0c3305277efd554f
+2025-12-27T09:15:25.935771Z  INFO ghost snapshot gate marked ready
+2025-12-27T09:15:30.447457Z  INFO ToolCall: shell_command {"command":".specify/scripts/bash/check-prerequisites.sh --json --paths-only","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:15:34.233930Z  INFO ToolCall: shell_command {"command":"sed -n '1,240p' /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T09:16:14.114102Z  INFO spawning ghost snapshot task
+2025-12-27T09:16:14.180974Z  INFO ghost snapshot blocking task finished
+2025-12-27T09:16:14.181025Z  INFO ghost commit captured: 7b9a3c01d4dc1cd6e342b037dbd52a260dc7e731
+2025-12-27T09:16:14.181038Z  INFO ghost snapshot gate marked ready
+2025-12-27T09:16:20.314379Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ - **Required Fields**: concept, description, application, tags, type, reference
+-- **Optional Fields**: confidence, source_pages, section_path
++- **Optional Fields**: confidence
+ - **Schema Version**: 1.0.0
+*** End Patch
+2025-12-27T09:16:29.450783Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ ### Edge Cases
+ 
+ - 書籍含有大量腳註或版面噪音時如何處理？
+ - 單段文字超過 1024 tokens 時如何分段與重試？
+ 
++## Clarifications
++
++### Session 2025-12-27
++
++- Q: reference 欄位該用何種索引格式？ → A: 僅頁碼範圍（例如 p12-14）。
++
+ ## Requirements *(mandatory)*
+@@
+ - **FR-007**: 系統 MUST 輸出 JSONL，包含 concept、description、application、
+   tags、type、reference 欄位。
++  - reference MUST 使用頁碼範圍格式（例如 p12-14）。
+@@
+ - **KnowledgeUnit**: 核心概念、描述、應用場景、標籤、類型、參考索引。
+*** End Patch
+2025-12-27T09:16:44.346878Z  INFO spawning ghost snapshot task
+2025-12-27T09:16:44.411508Z  INFO ghost snapshot blocking task finished
+2025-12-27T09:16:44.411558Z  INFO ghost commit captured: 2a6d9fdc3fe023a31dc46642b235cef811b48be9
+2025-12-27T09:16:44.411569Z  INFO ghost snapshot gate marked ready
+2025-12-27T09:16:50.829854Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ ### Session 2025-12-27
+ 
+ - Q: reference 欄位該用何種索引格式？ → A: 僅頁碼範圍（例如 p12-14）。
++- Q: Chunk 失敗時的處理策略？ → A: 失敗跳過並記錄，處理流程不中斷。
+@@
+ - **FR-009**: 系統 MUST 支援批次處理與重試機制以處理逾時。
++- **FR-011**: 系統 MUST 在 chunk 失敗時記錄錯誤並跳過，整體流程不中斷。
+*** End Patch
+2025-12-27T11:41:36.615905Z  INFO spawning ghost snapshot task
+2025-12-27T11:41:36.685092Z  INFO ghost snapshot blocking task finished
+2025-12-27T11:41:36.685142Z  INFO ghost commit captured: c54e0dc684f5d948c2d33297ed59a4efc8f25043
+2025-12-27T11:41:36.685161Z  INFO ghost snapshot gate marked ready
+2025-12-27T11:41:52.283656Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ ### Session 2025-12-27
+ 
+ - Q: reference 欄位該用何種索引格式？ → A: 僅頁碼範圍（例如 p12-14）。
+ - Q: Chunk 失敗時的處理策略？ → A: 失敗跳過並記錄，處理流程不中斷。
++- Q: 介面型態偏好？ → A: 僅本機 CLI，不提供 HTTP API。
+@@
+ - **FR-010**: 系統 MUST 產出檢索命中率驗證報告。
++- **FR-012**: 系統 MUST 僅提供本機 CLI 介面，不提供 HTTP API。
+*** End Patch
+2025-12-27T11:42:15.008282Z  INFO spawning ghost snapshot task
+2025-12-27T11:42:15.088797Z  INFO ghost snapshot blocking task finished
+2025-12-27T11:42:15.088852Z  INFO ghost commit captured: 6bdaf1499a215d33c357557ee81786b0087deb6f
+2025-12-27T11:42:15.088870Z  INFO ghost snapshot gate marked ready
+2025-12-27T11:43:09.646269Z  INFO spawning ghost snapshot task
+2025-12-27T11:43:09.699807Z  INFO ghost snapshot blocking task finished
+2025-12-27T11:43:09.699876Z  INFO ghost commit captured: 54dfbb365a0e9f29611fa6fa51969d4e3f21936a
+2025-12-27T11:43:09.699895Z  INFO ghost snapshot gate marked ready
+2025-12-27T11:43:16.562440Z  INFO ToolCall: shell_command {"command":".specify/scripts/bash/setup-plan.sh --json","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T11:43:24.346560Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T11:44:19.027418Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/plan.md\n# Implementation Plan: Universal Book-to-RAG Pipeline\n\n**Branch**: `001-universal-book-rag` | **Date**: 2025-12-27 | **Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md\n**Input**: Feature specification from `/home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md`\n\n**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.\n\n## Summary\n\nBuild a fully local pipeline that ingests PDF/EPUB/TXT/DOCX/MD, cleans and\nchunks text, generates structured knowledge units via Ollama 120B, stores\nvectors in ChromaDB, and exports JSONL for downstream RAG ingestion. Output\nfields follow `schemas/Schema.json` (concept/description/application/tags/\ntype/reference) and the prompt template in `prompts/prompt_template.md`. The\napproach uses Python 3.11 with LangChain orchestration, Unstructured parsing,\nBGE-M3 embeddings, and explicit quality gates for fidelity and hallucination\nrate.\n\n## Technical Context\n\n**Language/Version**: Python 3.11  \n**Primary Dependencies**: LangChain, Unstructured, ChromaDB, Ollama API client, BGE-M3  \n**Storage**: Local filesystem + ChromaDB collections  \n**Testing**: pytest  \n**Target Platform**: Linux (local workstation/server)  \n**Project Type**: single  \n**Performance Goals**: automation < 2 manual interventions per book; hallucination < 1%  \n**Constraints**: offline/local-only execution; CLI-only (no HTTP API)  \n**Scale/Scope**: single-book batch processing; support PDF/EPUB/TXT/DOCX/MD  \n\n**Config**: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml  \n**Prompt Template**: /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md  \n**Schema**: /home/pigo/文件/python/PrimeArchive-120B/schemas/Schema.json\n\n## Constitution Check\n\n*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*\n\n- Spec exists and is linked from this plan; scope matches charter intent.\n- User stories are independent, prioritized, and independently testable.\n- Quality gates are defined (lint/format; tests if required by spec; fail-first\n  testing when included).\n- Quality targets captured (automation rate, hallucination rate, format coverage).\n- Output schema defined (concept, description, application, tags, type, reference).\n- Local-only execution confirmed (Ollama; no external content calls).\n- Reproducibility plan captured (dependency versions, dataset hashes, seeds).\n- Semver impact assessed; breaking changes include migration notes.\n\n**Gate Evaluation**: PASS (all gates satisfied by spec and planned artifacts).\n\n## Project Structure\n\n### Documentation (this feature)\n\n```text\nspecs/001-universal-book-rag/\n├── plan.md              # This file (/speckit.plan command output)\n├── research.md          # Phase 0 output (/speckit.plan command)\n├── data-model.md        # Phase 1 output (/speckit.plan command)\n├── quickstart.md        # Phase 1 output (/speckit.plan command)\n├── contracts/           # Phase 1 output (/speckit.plan command)\n└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)\n```\n\n### Source Code (repository root)\n\n```text\nsrc/\n├── models/\n├── services/\n├── cli/\n└── lib/\n\ntests/\n├── contract/\n├── integration/\n└── unit/\n```\n\n**Structure Decision**: Single-project structure with `src/` and `tests/` at the\nrepository root.\n\n## Post-Design Constitution Check\n\n*Re-evaluated after Phase 1 design artifacts.*\n\n- Spec link verified and aligned with charter.\n- Output schema and privacy constraints documented.\n- Quality targets and validation steps included.\n- Reproducibility notes captured in spec and research.\n\n**Gate Evaluation**: PASS (no violations).\n\n## Complexity Tracking\n\n> **Fill ONLY if Constitution Check has violations that must be justified**\n\n| Violation | Why Needed | Simpler Alternative Rejected Because |\n|-----------|------------|-------------------------------------|\n| N/A | N/A | N/A |\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T11:44:25.660539Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/research.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T11:44:32.134453Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/data-model.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T11:44:38.073265Z  INFO ToolCall: shell_command {"command":"ls /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/contracts","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T11:44:57.735624Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+-### User Story 1 - 端到端書籍轉換為 QA 與標籤 (Priority: P1)
++### User Story 1 - 端到端書籍轉換為知識單元與標籤 (Priority: P1)
+@@
+-**Independent Test**: 匯入一份 PDF/EPUB，產出 JSONL，且知識單元與原文一致。
++**Independent Test**: 匯入一份 PDF/EPUB，產出 JSONL，且知識單元與原文一致。
+@@
+-### User Story 2 - 多格式支援與穩定切分 (Priority: P2)
++### User Story 2 - 多格式支援與穩定切分 (Priority: P2)
+ 
+-作為內容管理者，我希望 PDF/EPUB/TXT 都能被統一載入與切分，以便快速擴
++作為內容管理者，我希望 PDF/EPUB/TXT/DOCX/MD 都能被統一載入與切分，以便快速擴
+ 充資料來源。
+@@
+-**Independent Test**: 對三種格式各自轉換一次，均能產生切分結果。
++**Independent Test**: 對五種格式各自轉換一次，均能產生切分結果。
+@@
+-### Edge Cases
++### Edge Cases
+ 
+ - 書籍含有大量腳註或版面噪音時如何處理？
+-- 單段文字超過 1024 tokens 時如何分段與重試？
++- 單段文字超過 1000 字符時如何分段與重試？
+@@
+-- **FR-006**: 系統 MUST 透過本地 Ollama 的 120B 模型產生 QA 對與標籤。
++- **FR-006**: 系統 MUST 透過本地 Ollama 的 120B 模型產生知識單元與標籤。
+@@
+-- **FR-009**: 系統 MUST 支援批次處理與重試機制以處理逾時。
++- **FR-009**: 系統 MUST 支援批次處理與重試機制以處理逾時。
+@@
+-- **Book**: 書籍檔案與其 metadata（格式、來源、章節結構）。
++- **Book**: 書籍檔案與其 metadata（格式、來源、章節結構）。
+@@
+-- **KnowledgeUnit**: 核心概念、描述、應用場景、標籤、類型、參考索引。
++- **KnowledgeUnit**: 核心概念、描述、應用場景、標籤、類型、參考索引。
+@@
+-- **SC-002**: 產生的問答對與原文事實衝突率 < 1%。
++- **SC-002**: 產生的知識單元與原文事實衝突率 < 1%。
+*** End Patch
+2025-12-27T11:45:06.853303Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ 2. **Given** 含有 Markdown 標題的文本，**When** 使用 SmartChunker，**Then**
+-   以標題優先切分並維持 10% 重疊。
++   以標題優先切分並維持 100 字符重疊。
+*** End Patch
+2025-12-27T11:45:11.661071Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/data-model.md
+@@
+-- **Validation**: format MUST be one of PDF/EPUB/TXT; source_path MUST exist locally.
++- **Validation**: format MUST be one of PDF/EPUB/TXT/DOCX/MD; source_path MUST exist locally.
+@@
+-- **Validation**: content MUST be grounded in chunk content; tags non-empty.
++- **Validation**: content MUST be grounded in chunk content; tags non-empty; reference uses page range (e.g., p12-14).
+*** End Patch
+2025-12-27T11:45:16.270191Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/research.md
+@@
+-### Chunking Strategy
+-
+-- Decision: Markdown heading-first chunking with 512-1024 token limits and 10% overlap.
+-- Rationale: Preserves semantic hierarchy while controlling context size for 120B.
++### Chunking Strategy
++
++- Decision: Markdown heading-first chunking with 1000-character limit and 100-char overlap.
++- Rationale: Preserves semantic hierarchy while matching config and prompt context.
+*** End Patch
+2025-12-27T11:45:22.107228Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Delete File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/contracts/openapi.yaml
+*** End Patch
+2025-12-27T11:45:31.801118Z  INFO ToolCall: shell_command {"command":"cat <<'EOF' > /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/contracts/cli.md\n# CLI Contract: Universal Book-to-RAG Pipeline\n\n**Spec**: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md\n\n## Commands\n\n### pipeline\n\n```bash\npython -m src.cli.pipeline \\\n  --source <absolute_path> \\\n  --format <PDF|EPUB|TXT|DOCX|MD> \\\n  --output <absolute_jsonl_path>\n```\n\n**Inputs**:\n- `--source`: Absolute local file path.\n- `--format`: Must match the file format.\n- `--output`: Absolute JSONL output path.\n\n**Outputs**:\n- JSONL with fields: concept, description, application, tags, type, reference.\n- Logs stored locally without raw full-text retention.\n\n### validate\n\n```bash\npython -m src.cli.validate \\\n  --collection <collection_name> \\\n  --report <absolute_report_path>\n```\n\n**Outputs**:\n- Validation report with hit_rate and hallucination_rate.\n\n## Error Handling\n\n- Failed chunks are skipped and logged; pipeline continues.\n- Timeouts follow retry limits defined in config.\nEOF\n","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T11:45:36.954866Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T11:45:41.358829Z  INFO ToolCall: shell_command {"command":"/home/pigo/文件/python/PrimeArchive-120B/.specify/scripts/bash/update-agent-context.sh codex","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}

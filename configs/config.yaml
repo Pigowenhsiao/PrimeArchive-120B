@@ -1,0 +1,77 @@
+# PrimeArchive-120B: 通用書籍轉換框架配置文件
+
+project:
+  name: "PrimeArchive-120B"
+  version: "2.0.0-universal"
+  description: "Automated Book-to-RAG Knowledge Synthesis"
+
+# ------------------------------------------
+# 1. 本地 LLM 配置 (Ollama / Local API)
+# ------------------------------------------
+llm_settings:
+  model_name: "gpt-oss:120B-cloud"
+  base_url: "http://localhost:11434/v1" # Ollama 默認路徑
+  temperature: 0.1                      # 低隨機性，確保事實準確
+  num_ctx: 8192                         # 上下文窗口限制
+  top_p: 0.9
+  repeat_penalty: 1.1
+  max_tokens: 2048                      # 單次生成最大長度
+  timeout: 180                          # 單次 API 調用超時 (秒)
+
+# ------------------------------------------
+# 2. 通用書籍提取與切分策略 (ETL Strategy)
+# ------------------------------------------
+extraction:
+  supported_formats: [".pdf", ".epub", ".docx", ".txt", ".md"]
+  auto_clean: true                      # 自動移除頁碼與重複腳註
+  ocr_enabled: false                    # 若為掃描版 PDF 需開啟 (需額外套件)
+
+chunking:
+  # 預設通用切分邏輯
+  default:
+    method: "markdown"                 # 依 Markdown 標題層級優先切分
+    size: 1000                          # 字符數上限
+    overlap: 100                        # 段落重疊區間
+
+  # 領域自適應預設 (Domain Presets)
+  domain_presets:
+    technical:                          # 技術手冊/教材
+      size: 800
+      overlap: 150
+    literature:                         # 小說/敘事
+      size: 1500
+      overlap: 200
+    legal:                              # 條文/法律
+      size: 600
+      overlap: 50
+
+# ------------------------------------------
+# 3. 數據契約規格 (Data Schema Enforcement)
+# ------------------------------------------
+output_schema:
+  enforce_json: true                    # 強制 LLM 輸出 JSON
+  fields:
+    - "concept"                         # 核心概念
+    - "description"                     # 知識描述
+    - "application"                     # 實作/場景
+    - "tags"                            # 標籤
+    - "confidence"                      # 置信度 (0.0 - 1.0)
+  export_format: "jsonl"                # 適合大型向量庫導入
+
+# ------------------------------------------
+# 4. 資源監控與錯誤恢復 (Reliability)
+# ------------------------------------------
+reliability:
+  retry_limit: 3                        # 生成失敗重試次數
+  checkpoint_interval: 10               # 每處理 10 個 Chunk 保存一次進度
+  vram_protection: 0.90                 # 顯存佔用超過 90% 時自動排隊等待
+  error_handling: "skip_and_log"        # 遇錯時跳過並記錄，不中斷全程
+
+# ------------------------------------------
+# 5. 向量庫儲存配置 (Vector Store)
+# ------------------------------------------
+vector_store:
+  provider: "chromadb"
+  persist_dir: "./data/vector_db"
+  embedding_model: "BAAI/bge-m3"        # 中英日多語言通用模型
+  collection_name_prefix: "arch_v1_"

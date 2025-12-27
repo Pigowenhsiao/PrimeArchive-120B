@@ -1,0 +1,13 @@
+{
+  "knowledge_units": [
+    {
+      "id": "UUID",
+      "concept": "核心概念名稱",
+      "description": "精煉後的知識描述",
+      "application": "該知識的適用場景或實作建議",
+      "tags": ["領域標籤", "層級標籤"],
+      "type": "concept | procedure | case_study", 
+      "reference": "原始文本索引"
+    }
+  ]
+}
