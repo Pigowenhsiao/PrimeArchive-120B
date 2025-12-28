@@ -43,18 +43,23 @@ def run_pipeline(
     dump_chunks: bool = False,
     dump_path: Optional[pathlib.Path] = None,
     max_chunks: int = 0,
+    model_name: Optional[str] = None,
+    temperature: Optional[float] = None,
+    timeout_seconds: Optional[int] = None,
+    print_llm_output: Optional[bool] = None,
 ) -> None:
     config = load_config()
     llm_settings = config.get("llm_settings", {})
+    debug_cfg = config.get("debug", {})
     llm_client = LLMClient(
         base_url=llm_settings.get("base_url", "http://localhost:11434/v1"),
-        model_name=llm_settings.get("model_name", "gpt-oss:120B-cloud"),
-        temperature=llm_settings.get("temperature", 0.1),
+        model_name=model_name or llm_settings.get("model_name", "gpt-oss:120B-cloud"),
+        temperature=temperature if temperature is not None else llm_settings.get("temperature", 0.1),
         top_p=llm_settings.get("top_p", 0.9),
         repeat_penalty=llm_settings.get("repeat_penalty", 1.1),
         max_tokens=llm_settings.get("max_tokens", 2048),
         num_ctx=llm_settings.get("num_ctx", 8192),
-        timeout_seconds=llm_settings.get("timeout", 180),
+        timeout_seconds=timeout_seconds or llm_settings.get("timeout", 180),
         max_retries=config.get("reliability", {}).get("retry_limit", 3),
     )
     safe_log("pipeline.start", {"input": str(input_path), "output": str(output_path)})
@@ -92,12 +97,11 @@ def run_pipeline(
                 progress_callback,
             )
     references = build_references(chunks)
-    debug_cfg = config.get("debug", {})
     units = generate_units(
         chunks,
         references,
         llm_client=llm_client,
-        print_llm_output=debug_cfg.get("print_llm_output", False),
+        print_llm_output=print_llm_output if print_llm_output is not None else debug_cfg.get("print_llm_output", False),
     )
     safe_log("pipeline.generated", {"units": len(units)})
     _emit(f"Generated {len(units)} units", 70, log_callback, progress_callback)
@@ -126,6 +130,10 @@ def main() -> None:
     parser.add_argument("--dump-chunks", action="store_true")
     parser.add_argument("--dump-path", default="")
     parser.add_argument("--max-chunks", type=int, default=0)
+    parser.add_argument("--model-name", default="")
+    parser.add_argument("--temperature", type=float, default=None)
+    parser.add_argument("--timeout", type=int, default=0)
+    parser.add_argument("--print-llm-output", action="store_true")
     args = parser.parse_args()
 
     input_path = pathlib.Path(args.input)
@@ -137,6 +145,10 @@ def main() -> None:
     dump_path = args.dump_path or debug_cfg.get("dump_path", "")
     dump_path_value = pathlib.Path(dump_path) if dump_path else None
     max_chunks = args.max_chunks or debug_cfg.get("max_chunks", 0)
+    model_name = args.model_name or None
+    temperature = args.temperature
+    timeout_seconds = args.timeout or None
+    print_llm_output = args.print_llm_output or debug_cfg.get("print_llm_output", False)
 
     run_pipeline(
         input_path,
@@ -144,6 +156,10 @@ def main() -> None:
         dump_chunks=dump_chunks,
         dump_path=dump_path_value,
         max_chunks=max_chunks,
+        model_name=model_name,
+        temperature=temperature,
+        timeout_seconds=timeout_seconds,
+        print_llm_output=print_llm_output,
     )
 
 

@@ -9,7 +9,7 @@ project:
 # 1. 本地 LLM 配置 (Ollama / Local API)
 # ------------------------------------------
 llm_settings:
-  model_name: "ministral-3:8b-cloud"
+  model_name: "minimax-m2.1:cloud"
   base_url: "http://127.0.0.1:11434" # Ollama 默認路徑
   temperature: 0.1                      # 低隨機性，確保事實準確
   num_ctx: 8192                         # 上下文窗口限制

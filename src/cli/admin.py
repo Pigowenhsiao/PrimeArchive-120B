@@ -2,11 +2,12 @@ import argparse
 import pathlib
 from typing import Dict, Optional
 
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, UploadFile, File
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 import uvicorn
 
 from src.cli.pipeline import run_pipeline
+from src.cli.validate import run_validation
 from src.lib.config import load_config
 from src.services.job_manager import JobManager
 
@@ -74,18 +75,47 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str]) -> str:
   <h1>PrimeArchive 控制面板</h1>
   <p>Ollama 狀態: <strong>{status['status']}</strong> {status['detail']}</p>
   <p>頁面每 5 秒自動刷新</p>
-  <form method='post' action='/run'>
-    <label>輸入檔案路徑</label>
-    <input name='input_path' placeholder='/path/to/book.epub' required />
+  <form method='post' action='/run' enctype='multipart/form-data'>
+    <label>輸入檔案（檔案選擇）</label>
+    <input name='upload_file' type='file' />
+    <label>或輸入檔案路徑</label>
+    <input name='input_path' placeholder='/path/to/book.epub' />
     <label>格式</label>
-    <select name='file_format'>
+    <select name='file_format' required>
       <option value='epub'>epub</option>
       <option value='pdf'>pdf</option>
       <option value='txt'>txt</option>
     </select>
     <label>輸出 JSONL 路徑</label>
     <input name='output_path' placeholder='/tmp/output.jsonl' required />
+    <label>模型名稱（可覆寫）</label>
+    <input name='model_name' placeholder='minimax-m2.1:cloud' />
+    <label>溫度（可覆寫）</label>
+    <input name='temperature' placeholder='0.1' />
+    <label>逾時秒數（可覆寫）</label>
+    <input name='timeout' placeholder='300' />
+    <label>僅處理前 N 個 Chunk（0=全部）</label>
+    <input name='max_chunks' placeholder='5' />
+    <label>Debug：輸出 Chunk 到螢幕</label>
+    <select name='dump_chunks'>
+      <option value='false'>false</option>
+      <option value='true'>true</option>
+    </select>
+    <label>Debug：Chunk 檔案輸出路徑（可選）</label>
+    <input name='dump_path' placeholder='./data/debug_chunks.txt' />
+    <label>Debug：列印 LLM 原始輸出</label>
+    <select name='print_llm_output'>
+      <option value='false'>false</option>
+      <option value='true'>true</option>
+    </select>
     <button type='submit'>開始處理</button>
+  </form>
+
+  <h2>驗證工具</h2>
+  <form method='post' action='/validate'>
+    <label>JSONL 檔案路徑</label>
+    <input name='validate_path' placeholder='/tmp/output.jsonl' required />
+    <button type='submit'>執行驗證</button>
   </form>
 
   <h2>最近任務</h2>
@@ -111,21 +141,45 @@ def home() -> str:
 
 @app.post("/run")
 def run_job(
-    input_path: str = Form(...),
+    input_path: str = Form(""),
+    upload_file: UploadFile | None = File(None),
     output_path: str = Form(...),
     file_format: str = Form(...),
+    model_name: str = Form(""),
+    temperature: str = Form(""),
+    timeout: str = Form(""),
+    max_chunks: str = Form(""),
+    dump_chunks: str = Form("false"),
+    dump_path: str = Form(""),
+    print_llm_output: str = Form("false"),
 ) -> HTMLResponse:
-    input_file = pathlib.Path(input_path)
-    if not input_file.exists():
-        return HTMLResponse(
-            f"<p>Input file not found: {input_path}</p>", status_code=400
-        )
+    uploads_dir = pathlib.Path("data/uploads")
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    input_file: pathlib.Path
+    if upload_file is not None and upload_file.filename:
+        target = uploads_dir / upload_file.filename
+        content = upload_file.file.read()
+        target.write_bytes(content)
+        input_file = target
+        input_path = str(target)
+    else:
+        if not input_path:
+            return HTMLResponse("<p>No input file provided.</p>", status_code=400)
+        input_file = pathlib.Path(input_path)
+        if not input_file.exists():
+            return HTMLResponse(
+                f"<p>Input file not found: {input_path}</p>", status_code=400
+            )
     job = job_manager.create_job(input_path, output_path, file_format)
     config = load_config()
     debug_cfg = config.get("debug", {})
-    dump_chunks = debug_cfg.get("dump_chunks", False)
-    dump_path = debug_cfg.get("dump_path", "")
-    max_chunks = debug_cfg.get("max_chunks", 0)
+    dump_chunks_value = dump_chunks.lower() == "true"
+    print_llm_output_value = print_llm_output.lower() == "true"
+    dump_path_value = dump_path or debug_cfg.get("dump_path", "")
+    max_chunks_value = int(max_chunks) if max_chunks.strip() else debug_cfg.get("max_chunks", 0)
+    temperature_value = float(temperature) if temperature.strip() else None
+    timeout_value = int(timeout) if timeout.strip() else None
+    model_name_value = model_name.strip() or None
     job_manager.run_in_thread(
         job.job_id,
         run_pipeline,
@@ -135,9 +189,13 @@ def run_job(
         lambda progress, step: job_manager.update_job(
             job.job_id, progress=progress, last_step=step
         ),
-        dump_chunks,
-        pathlib.Path(dump_path) if dump_path else None,
-        max_chunks,
+        dump_chunks_value,
+        pathlib.Path(dump_path_value) if dump_path_value else None,
+        max_chunks_value,
+        model_name_value,
+        temperature_value,
+        timeout_value,
+        print_llm_output_value,
     )
     return HTMLResponse(
         f"<p>Job started: {job.job_id}</p><p><a href='/'>Back</a></p>",
@@ -205,6 +263,21 @@ def download_output(job_id: str) -> FileResponse:
     if not path.exists():
         return FileResponse("", status_code=404)
     return FileResponse(path)
+
+
+@app.post("/validate")
+def validate_output(validate_path: str = Form(...)) -> HTMLResponse:
+    path = pathlib.Path(validate_path)
+    if not path.exists():
+        return HTMLResponse("<p>Validation file not found.</p>", status_code=400)
+    try:
+        rate = run_validation(path)
+    except Exception as exc:
+        return HTMLResponse(f"<p>Validation failed: {exc}</p>", status_code=400)
+    return HTMLResponse(
+        f"<p>Validation complete. Hallucination rate: {rate}</p><p><a href='/'>Back</a></p>",
+        status_code=200,
+    )
 
 
 def main() -> None:

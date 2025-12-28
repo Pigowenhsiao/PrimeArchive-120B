@@ -3742,3 +3742,361 @@
 2025-12-28T00:04:01.513238Z  INFO ghost commit captured: 62c84d2ec428ab768c1736addf874a6ffa8102ea
 2025-12-28T00:04:01.513250Z  INFO ghost snapshot gate marked ready
 2025-12-28T00:04:07.873334Z  INFO ToolCall: shell_command {"command":"sed -n '1,5p' /tmp/test-book3-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T00:11:43.891291Z  INFO spawning ghost snapshot task
+2025-12-28T00:11:44.000937Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:11:44.000977Z  INFO ghost commit captured: 784de86e4051bfafec7a2fcdab28ee5de79fe823
+2025-12-28T00:11:44.000988Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:11:53.184285Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+-  model_name: "ministral-3:8b-cloud"
++  model_name: "minimax-m2.1:cloud"
+*** End Patch
+2025-12-28T00:12:02.982244Z  INFO spawning ghost snapshot task
+2025-12-28T00:12:03.095923Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:12:03.095964Z  INFO ghost commit captured: a9591c5a2a8c54beaae622658c7a563268637595
+2025-12-28T00:12:03.095974Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:12:10.083025Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book3.epub --format epub --output /tmp/test-book3-output.jsonl --max-chunks 5","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":300000}
+2025-12-28T00:37:34.787170Z  INFO spawning ghost snapshot task
+2025-12-28T00:37:34.900046Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:37:34.900092Z  INFO ghost commit captured: 1010ce21265c9266ae89a0f0e0c9f2afba23b5f7
+2025-12-28T00:37:34.900102Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:41:00.975238Z  INFO spawning ghost snapshot task
+2025-12-28T00:41:01.090623Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:41:01.090675Z  INFO ghost commit captured: 09e4396da6ed6828a7e6f23a5593c396eb470059
+2025-12-28T00:41:01.090686Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:42:11.064318Z  INFO spawning ghost snapshot task
+2025-12-28T00:42:11.263895Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:42:11.263959Z  INFO ghost commit captured: 00348e0b3d45dac8ca79f28e11942b897fb22f0e
+2025-12-28T00:42:11.263971Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:42:19.104799Z  INFO ToolCall: shell_command {"command":"cat /home/pigo/文件/python/PrimeArchive-120B/requirements.txt","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T00:42:56.048011Z  INFO spawning ghost snapshot task
+2025-12-28T00:42:56.167301Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:42:56.167346Z  INFO ghost commit captured: bcf84cb8141f510d71d4ec8cbac66ccaec3d3f26
+2025-12-28T00:42:56.167356Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:43:03.183422Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/requirements.txt
+@@
+ uvicorn
++python-multipart
+*** End Patch
+2025-12-28T00:43:58.526061Z  INFO spawning ghost snapshot task
+2025-12-28T00:43:58.642425Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:43:58.642465Z  INFO ghost commit captured: 733b49c08a84b0cfc3fbfb8ddb7e5e2b264c5714
+2025-12-28T00:43:58.642475Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:44:10.867839Z  INFO spawning ghost snapshot task
+2025-12-28T00:44:11.031923Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:44:11.032012Z  INFO ghost commit captured: 139bd7b87f0aed9195080f0542bd519abc1b98fa
+2025-12-28T00:44:11.032064Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:44:34.378624Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+-from typing import Callable, List, Optional, Tuple
++from typing import Callable, List, Optional, Tuple
+@@
+ def run_pipeline(
+     input_path: pathlib.Path,
+     output_path: pathlib.Path,
+     log_callback: Optional[Callable[[str], None]] = None,
+     progress_callback: Optional[Callable[[int, str], None]] = None,
+     dump_chunks: bool = False,
+     dump_path: Optional[pathlib.Path] = None,
+     max_chunks: int = 0,
++    model_name: Optional[str] = None,
++    temperature: Optional[float] = None,
++    timeout_seconds: Optional[int] = None,
++    print_llm_output: Optional[bool] = None,
+ ) -> None:
+     config = load_config()
+     llm_settings = config.get("llm_settings", {})
++    debug_cfg = config.get("debug", {})
+     llm_client = LLMClient(
+         base_url=llm_settings.get("base_url", "http://localhost:11434/v1"),
+-        model_name=llm_settings.get("model_name", "gpt-oss:120B-cloud"),
+-        temperature=llm_settings.get("temperature", 0.1),
++        model_name=model_name or llm_settings.get("model_name", "gpt-oss:120B-cloud"),
++        temperature=temperature if temperature is not None else llm_settings.get("temperature", 0.1),
+         top_p=llm_settings.get("top_p", 0.9),
+         repeat_penalty=llm_settings.get("repeat_penalty", 1.1),
+         max_tokens=llm_settings.get("max_tokens", 2048),
+         num_ctx=llm_settings.get("num_ctx", 8192),
+-        timeout_seconds=llm_settings.get("timeout", 180),
++        timeout_seconds=timeout_seconds or llm_settings.get("timeout", 180),
+         max_retries=config.get("reliability", {}).get("retry_limit", 3),
+     )
+@@
+-    debug_cfg = config.get("debug", {})
+     units = generate_units(
+         chunks,
+         references,
+         llm_client=llm_client,
+-        print_llm_output=debug_cfg.get("print_llm_output", False),
++        print_llm_output=print_llm_output if print_llm_output is not None else debug_cfg.get("print_llm_output", False),
+     )
+@@
+ def main() -> None:
+     parser = argparse.ArgumentParser(description="Book-to-RAG pipeline")
+     parser.add_argument("--input", required=True)
+     parser.add_argument("--format", required=True)
+     parser.add_argument("--output", required=True)
+     parser.add_argument("--dump-chunks", action="store_true")
+     parser.add_argument("--dump-path", default="")
+     parser.add_argument("--max-chunks", type=int, default=0)
++    parser.add_argument("--model-name", default="")
++    parser.add_argument("--temperature", type=float, default=None)
++    parser.add_argument("--timeout", type=int, default=0)
++    parser.add_argument("--print-llm-output", action="store_true")
+     args = parser.parse_args()
+@@
+-    max_chunks = args.max_chunks or debug_cfg.get("max_chunks", 0)
++    max_chunks = args.max_chunks or debug_cfg.get("max_chunks", 0)
++    model_name = args.model_name or None
++    temperature = args.temperature
++    timeout_seconds = args.timeout or None
++    print_llm_output = args.print_llm_output or debug_cfg.get("print_llm_output", False)
+@@
+     run_pipeline(
+         input_path,
+         output_path,
+         dump_chunks=dump_chunks,
+         dump_path=dump_path_value,
+         max_chunks=max_chunks,
++        model_name=model_name,
++        temperature=temperature,
++        timeout_seconds=timeout_seconds,
++        print_llm_output=print_llm_output,
+     )
+*** End Patch
+2025-12-28T00:45:03.050282Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py
+@@
+-from fastapi import FastAPI, Form
++from fastapi import FastAPI, Form
+@@
+-from src.cli.pipeline import run_pipeline
++from src.cli.pipeline import run_pipeline
++from src.cli.validate import run_validation
+@@
+-  <form method='post' action='/run'>
++  <form method='post' action='/run'>
+     <label>輸入檔案路徑</label>
+     <input name='input_path' placeholder='/path/to/book.epub' required />
+     <label>格式</label>
+     <select name='file_format'>
+       <option value='epub'>epub</option>
+       <option value='pdf'>pdf</option>
+       <option value='txt'>txt</option>
+     </select>
+     <label>輸出 JSONL 路徑</label>
+     <input name='output_path' placeholder='/tmp/output.jsonl' required />
++    <label>模型名稱（可覆寫）</label>
++    <input name='model_name' placeholder='minimax-m2.1:cloud' />
++    <label>溫度（可覆寫）</label>
++    <input name='temperature' placeholder='0.1' />
++    <label>逾時秒數（可覆寫）</label>
++    <input name='timeout' placeholder='300' />
++    <label>僅處理前 N 個 Chunk（0=全部）</label>
++    <input name='max_chunks' placeholder='5' />
++    <label>Debug：輸出 Chunk 到螢幕</label>
++    <select name='dump_chunks'>
++      <option value='false'>false</option>
++      <option value='true'>true</option>
++    </select>
++    <label>Debug：Chunk 檔案輸出路徑（可選）</label>
++    <input name='dump_path' placeholder='./data/debug_chunks.txt' />
++    <label>Debug：列印 LLM 原始輸出</label>
++    <select name='print_llm_output'>
++      <option value='false'>false</option>
++      <option value='true'>true</option>
++    </select>
+     <button type='submit'>開始處理</button>
+   </form>
++
++  <h2>驗證工具</h2>
++  <form method='post' action='/validate'>
++    <label>JSONL 檔案路徑</label>
++    <input name='validate_path' placeholder='/tmp/output.jsonl' required />
++    <button type='submit'>執行驗證</button>
++  </form>
+@@
+ def run_job(
+     input_path: str = Form(...),
+     output_path: str = Form(...),
+     file_format: str = Form(...),
++    model_name: str = Form(""),
++    temperature: str = Form(""),
++    timeout: str = Form(""),
++    max_chunks: str = Form(""),
++    dump_chunks: str = Form("false"),
++    dump_path: str = Form(""),
++    print_llm_output: str = Form("false"),
+ ) -> HTMLResponse:
+@@
+-    config = load_config()
+-    debug_cfg = config.get("debug", {})
+-    dump_chunks = debug_cfg.get("dump_chunks", False)
+-    dump_path = debug_cfg.get("dump_path", "")
+-    max_chunks = debug_cfg.get("max_chunks", 0)
++    config = load_config()
++    debug_cfg = config.get("debug", {})
++    dump_chunks_value = dump_chunks.lower() == "true"
++    print_llm_output_value = print_llm_output.lower() == "true"
++    dump_path_value = dump_path or debug_cfg.get("dump_path", "")
++    max_chunks_value = int(max_chunks) if max_chunks.strip() else debug_cfg.get("max_chunks", 0)
++    temperature_value = float(temperature) if temperature.strip() else None
++    timeout_value = int(timeout) if timeout.strip() else None
++    model_name_value = model_name.strip() or None
+@@
+     job_manager.run_in_thread(
+         job.job_id,
+         run_pipeline,
+         pathlib.Path(input_path),
+         pathlib.Path(output_path),
+         lambda msg: job_manager.append_log(job.job_id, msg),
+         lambda progress, step: job_manager.update_job(
+             job.job_id, progress=progress, last_step=step
+         ),
+-        dump_chunks,
+-        pathlib.Path(dump_path) if dump_path else None,
+-        max_chunks,
++        dump_chunks_value,
++        pathlib.Path(dump_path_value) if dump_path_value else None,
++        max_chunks_value,
++        model_name_value,
++        temperature_value,
++        timeout_value,
++        print_llm_output_value,
+     )
+@@
+ @app.get("/jobs/{job_id}/download")
+ def download_output(job_id: str) -> FileResponse:
+@@
+     return FileResponse(path)
++
++
++@app.post("/validate")
++def validate_output(validate_path: str = Form(...)) -> HTMLResponse:
++    path = pathlib.Path(validate_path)
++    if not path.exists():
++        return HTMLResponse("<p>Validation file not found.</p>", status_code=400)
++    try:
++        rate = run_validation(path)
++    except Exception as exc:
++        return HTMLResponse(f"<p>Validation failed: {exc}</p>", status_code=400)
++    return HTMLResponse(
++        f"<p>Validation complete. Hallucination rate: {rate}</p><p><a href='/'>Back</a></p>",
++        status_code=200,
++    )
+*** End Patch
+2025-12-28T00:45:10.320752Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+ Open http://127.0.0.1:8000 to submit jobs and view status.
+ The UI auto-refreshes, shows a progress bar, last step, output preview/download,
+ and Ollama status.
+ 
+ Job logs are stored in `data/job_logs/` per job ID.
++
++### Admin UI Controls
++
++- Model name override
++- Temperature/timeout overrides
++- Max chunks limiter (0 = all)
++- Chunk dump / LLM output toggles
++- Validate JSONL file (hallucination rate)
+*** End Patch
+2025-12-28T00:45:17.182634Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md
+@@
+ Open http://127.0.0.1:8000 to submit jobs and view status.
+ The UI auto-refreshes and shows a progress bar, recent step, output
+ preview/download, and Ollama status.
+ 
+ Job logs are stored in `data/job_logs/` per job ID.
++
++UI controls include model/temperature/timeout overrides, max-chunk limiter,
++chunk/LLM debug toggles, and a JSONL validation form.
+*** End Patch
+2025-12-28T00:45:24.554792Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/tasks.md
+@@
+ - [X] T047 [P] Persist job logs to files in `src/services/job_manager.py`
+ - [X] T048 [P] Add optional chunk dump for debugging in `src/cli/pipeline.py`
+ - [X] T049 [P] Add max-chunks limiter for debugging in `src/cli/pipeline.py`
++- [X] T050 [P] Add admin UI controls for debug/model overrides and validation in `src/cli/admin.py`
+*** End Patch
+2025-12-28T00:45:52.528592Z  INFO spawning ghost snapshot task
+2025-12-28T00:45:52.648107Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:45:52.648152Z  INFO ghost commit captured: 40e3e7c40486633779957df5c97cafe1ee08b839
+2025-12-28T00:45:52.648162Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:46:11.058036Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py
+@@
+-from fastapi import FastAPI, Form
++from fastapi import FastAPI, Form, UploadFile, File
+@@
+-  <form method='post' action='/run'>
+-    <label>輸入檔案路徑</label>
+-    <input name='input_path' placeholder='/path/to/book.epub' required />
++  <form method='post' action='/run' enctype='multipart/form-data'>
++    <label>輸入檔案（檔案選擇）</label>
++    <input name='upload_file' type='file' />
++    <label>或輸入檔案路徑</label>
++    <input name='input_path' placeholder='/path/to/book.epub' />
+@@
+-    <select name='file_format'>
++    <select name='file_format' required>
+@@
+-    <input name='output_path' placeholder='/tmp/output.jsonl' required />
++    <input name='output_path' placeholder='/tmp/output.jsonl' required />
+@@
+ def run_job(
+-    input_path: str = Form(...),
++    input_path: str = Form(""),
++    upload_file: UploadFile | None = File(None),
+     output_path: str = Form(...),
+     file_format: str = Form(...),
+@@
+ ) -> HTMLResponse:
+-    input_file = pathlib.Path(input_path)
+-    if not input_file.exists():
+-        return HTMLResponse(
+-            f"<p>Input file not found: {input_path}</p>", status_code=400
+-        )
++    uploads_dir = pathlib.Path("data/uploads")
++    uploads_dir.mkdir(parents=True, exist_ok=True)
++    input_file: pathlib.Path
++    if upload_file is not None and upload_file.filename:
++        target = uploads_dir / upload_file.filename
++        content = upload_file.file.read()
++        target.write_bytes(content)
++        input_file = target
++        input_path = str(target)
++    else:
++        if not input_path:
++            return HTMLResponse("<p>No input file provided.</p>", status_code=400)
++        input_file = pathlib.Path(input_path)
++        if not input_file.exists():
++            return HTMLResponse(
++                f"<p>Input file not found: {input_path}</p>", status_code=400
++            )
+*** End Patch
+2025-12-28T00:46:17.290468Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+-Open http://127.0.0.1:8000 to submit jobs and view status.
++Open http://127.0.0.1:8000 to submit jobs and view status.
++You can select files via the browser file picker or provide a local path.
+*** End Patch
+2025-12-28T00:46:24.568740Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/quickstart.md
+@@
+ Open http://127.0.0.1:8000 to submit jobs and view status.
+ The UI auto-refreshes and shows a progress bar, recent step, output
+ preview/download, and Ollama status.
++You can choose a file with the browser file picker or provide a local path.
+*** End Patch
+2025-12-28T00:48:23.064344Z  INFO spawning ghost snapshot task
+2025-12-28T00:48:23.187102Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:48:23.187148Z  INFO ghost commit captured: 9e18199023e09bbe6afd868c9524f60bd02d68ae
+2025-12-28T00:48:23.187159Z  INFO ghost snapshot gate marked ready
