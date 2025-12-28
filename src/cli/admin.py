@@ -411,15 +411,12 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
       }}
     }};
 
-<<<<<<< HEAD
     const scrollLogToBottom = () => {{
       if (jobLog) {{
         jobLog.scrollTop = jobLog.scrollHeight;
       }}
     }};
 
-=======
->>>>>>> 6992d7e8ff6687c4eb8c6a812dc67ade25ae47af
     const appendInfo = (text) => {{
       if (!jobLog) {{
         return;
@@ -427,10 +424,7 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
       const current = jobLog.textContent || "";
       const next = current === "尚未載入。" || current === "等待訊息..." ? "" : `${{current}}\n`;
       jobLog.textContent = `${{next}}${{text}}`;
-<<<<<<< HEAD
       scrollLogToBottom();
-=======
->>>>>>> 6992d7e8ff6687c4eb8c6a812dc67ade25ae47af
     }};
 
     const pollJob = async () => {{
@@ -443,7 +437,6 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
           return;
         }}
         const data = await response.json();
-<<<<<<< HEAD
         setJobStatus(
           `狀態：${{data.status}}\nChunk 進度：${{data.progress}}%\n步驟：${{data.last_step}}`,
           data.progress
@@ -451,11 +444,10 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
         if (jobLog && Array.isArray(data.logs)) {{
           jobLog.textContent = data.logs.join("\\n") || "尚未載入。";
           scrollLogToBottom();
-=======
+
         setJobStatus(`狀態：${{data.status}} · 進度：${{data.progress}}% · 步驟：${{data.last_step}}`, data.progress);
         if (jobLog && Array.isArray(data.logs)) {{
           jobLog.textContent = data.logs.join("\\n") || "尚未載入。";
->>>>>>> 6992d7e8ff6687c4eb8c6a812dc67ade25ae47af
         }}
         if (jobOutput && data.output) {{
           jobOutput.textContent = data.output;
