@@ -6,6 +6,7 @@ SYSTEM_PROMPT = """你是一位極致嚴謹的知識解構專家。
 2. **場景化**：為每個知識點設想一個真實的寫作或應用場景。
 3. **標籤化**：提取 3-5 個階層式的標籤（如：文法 > 動詞 > 時態）。
 4. **輸出格式**：必須嚴格遵守 JSON 格式與欄位定義。
+5. **語言**：輸出內容必須使用繁體中文或英文，禁止其他語言。
 """
 
 USER_PROMPT_TEMPLATE = """
@@ -15,7 +16,17 @@ USER_PROMPT_TEMPLATE = """
 ---
 
 輸出要求：
-請分析這段文本，提取出核心知識點並輸出為 JSON 格式。
-JSON 應包含：concept、description、application、tags（list）、
-type（concept|procedure|case_study）、reference。
+請分析這段文本，提取出核心知識點並輸出為單一 JSON 物件（不要用陣列）。
+JSON 僅允許以下欄位：
+- concept: string
+- description: string
+- application: string
+- tags: string[]
+- type: "concept" | "procedure" | "case_study"
+- reference: string
+
+嚴格要求：
+1) 只輸出 JSON 物件本身，不要 markdown code block。
+2) application 與 reference 必須是字串（不可使用物件或陣列）。
+3) tags 必須是字串陣列，不可巢狀。
 """

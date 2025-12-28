@@ -22,6 +22,25 @@ python -m src.cli.pipeline --input /path/to/book.epub --format epub --output /tm
 python -m src.cli.validate --input /tmp/output.jsonl
 ```
 
+### Chunk Debug (Temporary)
+
+Enable chunk dump in `configs/config.yaml` (prints to screen; optional file):
+
+```yaml
+debug:
+  dump_chunks: true
+  dump_path: "./data/debug_chunks.txt"
+  print_llm_output: true
+  max_chunks: 5
+  # max_chunks: 0 means all chunks
+```
+
+Or via CLI flags (prints to screen; optional file):
+
+```bash
+python -m src.cli.pipeline --input /path/to/book.epub --format epub --output /tmp/output.jsonl --dump-chunks --dump-path /tmp/chunks.txt --max-chunks 5
+```
+
 ## Admin UI
 
 ```bash

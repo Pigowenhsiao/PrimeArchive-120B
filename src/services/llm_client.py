@@ -9,13 +9,17 @@ from src.lib.network_guard import enforce_local_only
 
 
 def _parse_json_content(content: str) -> Optional[Dict[str, Any]]:
+    cleaned = content.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        cleaned = cleaned.replace("json", "", 1).strip()
     try:
-        return json.loads(content)
+        return json.loads(cleaned)
     except json.JSONDecodeError:
-        if "{" in content and "}" in content:
-            start = content.find("{")
-            end = content.rfind("}")
-            snippet = content[start : end + 1]
+        if "{" in cleaned and "}" in cleaned:
+            start = cleaned.find("{")
+            end = cleaned.rfind("}")
+            snippet = cleaned[start : end + 1]
             try:
                 return json.loads(snippet)
             except json.JSONDecodeError:

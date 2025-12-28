@@ -2968,3 +2968,777 @@
 2025-12-27T13:38:01.438235Z  INFO ghost snapshot gate marked ready
 2025-12-27T13:38:09.263064Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book.epub --format epub --output /tmp/test-book-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":300000}
 2025-12-27T13:40:11.649989Z  INFO interrupt received: abort current task, if any
+2025-12-27T13:50:36.440999Z  INFO spawning ghost snapshot task
+2025-12-27T13:50:36.542221Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:50:36.542261Z  INFO ghost commit captured: 40f92e2e70bbc9ccc484f0f64d29f36d84f88730
+2025-12-27T13:50:36.542274Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:50:52.799132Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/generator.py
+@@
+-from src.services.llm_client import LLMClient
+-from src.services.prompting import build_prompt
++from src.services.llm_client import LLMClient
++from src.services.prompting import build_prompt
++
++
++REQUIRED_FIELDS = {"concept", "description", "application", "tags", "type"}
++OPTIONAL_FIELDS = {"confidence", "reference"}
++
++
++def _sanitize_unit(unit: Dict[str, Any], reference: str) -> Dict[str, Any]:
++    cleaned = {k: v for k, v in unit.items() if k in REQUIRED_FIELDS | OPTIONAL_FIELDS}
++    if "reference" not in cleaned:
++        cleaned["reference"] = reference
++    if not REQUIRED_FIELDS.issubset(cleaned.keys()):
++        raise ValueError("Missing required fields")
++    return cleaned
+@@
+-        if llm_client:
++        if llm_client:
+             system_prompt, user_prompt = build_prompt(chunk)
+-            response = llm_client.generate(system_prompt, user_prompt)
+-            unit = response.get("unit") or response
+-            if "reference" not in unit:
+-                unit["reference"] = reference
++            response = llm_client.generate(system_prompt, user_prompt)
++            candidate = response.get("unit") or response
++            try:
++                unit = _sanitize_unit(candidate, reference)
++            except ValueError:
++                unit = _fallback_unit(chunk, reference)
+         else:
+             unit = _fallback_unit(chunk, reference)
+*** End Patch
+2025-12-27T13:51:52.245176Z  INFO spawning ghost snapshot task
+2025-12-27T13:51:52.363578Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:51:52.363621Z  INFO ghost commit captured: fb3d1325b5a5825f211e6a758bc5a3cbcdbfad4c
+2025-12-27T13:51:52.363631Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:51:58.748254Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+ chunking:
+@@
+   domain_presets:
+@@
+     legal:                              # 條文/法律
+       size: 600
+       overlap: 50
++
++# ------------------------------------------
++# 3.1 Chunk Debug
++# ------------------------------------------
++debug:
++  dump_chunks: false
++  dump_path: "./data/debug_chunks.txt"
+*** End Patch
+2025-12-27T13:52:13.187511Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+-import argparse
++import argparse
+ import pathlib
+-from typing import Callable, List, Optional, Tuple
++from typing import Callable, List, Optional, Tuple
+@@
+-def run_pipeline(
++def run_pipeline(
+     input_path: pathlib.Path,
+     output_path: pathlib.Path,
+     log_callback: Optional[Callable[[str], None]] = None,
+     progress_callback: Optional[Callable[[int, str], None]] = None,
++    dump_chunks: bool = False,
++    dump_path: Optional[pathlib.Path] = None,
+ ) -> None:
+@@
+-    chunks = smart_chunk(cleaned)
++    chunks = smart_chunk(cleaned)
+     safe_log("pipeline.chunked", {"chunks": len(chunks)})
+     _emit(f"Chunked text into {len(chunks)} parts", 45, log_callback, progress_callback)
++    if dump_chunks and dump_path:
++        dump_path.parent.mkdir(parents=True, exist_ok=True)
++        with dump_path.open("w", encoding="utf-8") as handle:
++            for idx, chunk in enumerate(chunks, start=1):
++                handle.write(f"## Chunk {idx}\n")
++                handle.write(chunk)
++                handle.write("\n\n")
++        _emit(f"Chunk dump saved to {dump_path}", 48, log_callback, progress_callback)
+@@
+ def main() -> None:
+     parser = argparse.ArgumentParser(description="Book-to-RAG pipeline")
+     parser.add_argument("--input", required=True)
+     parser.add_argument("--format", required=True)
+     parser.add_argument("--output", required=True)
++    parser.add_argument("--dump-chunks", action="store_true")
++    parser.add_argument("--dump-path", default="")
+     args = parser.parse_args()
+ 
+     input_path = pathlib.Path(args.input)
+     output_path = pathlib.Path(args.output)
+ 
+-    run_pipeline(input_path, output_path)
++    config = load_config()
++    debug_cfg = config.get("debug", {})
++    dump_chunks = args.dump_chunks or debug_cfg.get("dump_chunks", False)
++    dump_path = args.dump_path or debug_cfg.get("dump_path", "")
++    dump_path_value = pathlib.Path(dump_path) if dump_path else None
++
++    run_pipeline(
++        input_path,
++        output_path,
++        dump_chunks=dump_chunks,
++        dump_path=dump_path_value,
++    )
+*** End Patch
+2025-12-27T13:52:20.355701Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py
+@@
+-    job_manager.run_in_thread(
++    config = load_config()
++    debug_cfg = config.get("debug", {})
++    dump_chunks = debug_cfg.get("dump_chunks", False)
++    dump_path = debug_cfg.get("dump_path", "")
++    job_manager.run_in_thread(
+         job.job_id,
+         run_pipeline,
+         pathlib.Path(input_path),
+         pathlib.Path(output_path),
+         lambda msg: job_manager.append_log(job.job_id, msg),
+         lambda progress, step: job_manager.update_job(
+             job.job_id, progress=progress, last_step=step
+         ),
++        dump_chunks,
++        pathlib.Path(dump_path) if dump_path else None,
+     )
+*** End Patch
+2025-12-27T13:52:26.909068Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+ ## CLI Usage
+ 
+ ```bash
+ . .venv/bin/activate
+ export PYTHONPATH=.
+ python -m src.cli.pipeline --input /path/to/book.epub --format epub --output /tmp/output.jsonl
+ python -m src.cli.validate --input /tmp/output.jsonl
+ ```
+ 
++### Chunk Debug (Temporary)
++
++Enable chunk dump in `configs/config.yaml`:
++
++```yaml
++debug:
++  dump_chunks: true
++  dump_path: "./data/debug_chunks.txt"
++```
++
++Or via CLI flags:
++
++```bash
++python -m src.cli.pipeline --input /path/to/book.epub --format epub --output /tmp/output.jsonl --dump-chunks --dump-path /tmp/chunks.txt
++```
++
+ ## Admin UI
+*** End Patch
+2025-12-27T13:52:33.667108Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/tasks.md
+@@
+ - [X] T047 [P] Persist job logs to files in `src/services/job_manager.py`
++- [X] T048 [P] Add optional chunk dump for debugging in `src/cli/pipeline.py`
+*** End Patch
+2025-12-27T13:53:17.941278Z  INFO spawning ghost snapshot task
+2025-12-27T13:53:18.045388Z  INFO ghost snapshot blocking task finished
+2025-12-27T13:53:18.045430Z  INFO ghost commit captured: 1cc25e6f4f8f8e34df198c2963ced60c5598bdfb
+2025-12-27T13:53:18.045440Z  INFO ghost snapshot gate marked ready
+2025-12-27T13:53:30.912255Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+-    if dump_chunks and dump_path:
+-        dump_path.parent.mkdir(parents=True, exist_ok=True)
+-        with dump_path.open("w", encoding="utf-8") as handle:
+-            for idx, chunk in enumerate(chunks, start=1):
+-                handle.write(f"## Chunk {idx}\n")
+-                handle.write(chunk)
+-                handle.write("\n\n")
+-        _emit(f"Chunk dump saved to {dump_path}", 48, log_callback, progress_callback)
++    if dump_chunks:
++        for idx, chunk in enumerate(chunks, start=1):
++            print(f"## Chunk {idx}\n{chunk}\n")
++        if dump_path:
++            dump_path.parent.mkdir(parents=True, exist_ok=True)
++            with dump_path.open("w", encoding="utf-8") as handle:
++                for idx, chunk in enumerate(chunks, start=1):
++                    handle.write(f"## Chunk {idx}\n")
++                    handle.write(chunk)
++                    handle.write("\n\n")
++            _emit(
++                f"Chunk dump saved to {dump_path}",
++                48,
++                log_callback,
++                progress_callback,
++            )
+*** End Patch
+2025-12-27T13:53:35.314940Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+-Enable chunk dump in `configs/config.yaml`:
++Enable chunk dump in `configs/config.yaml` (prints to screen; optional file):
+@@
+-Or via CLI flags:
++Or via CLI flags (prints to screen; optional file):
+*** End Patch
+2025-12-27T14:00:42.977612Z  INFO spawning ghost snapshot task
+2025-12-27T14:00:43.091309Z  INFO ghost snapshot blocking task finished
+2025-12-27T14:00:43.091365Z  INFO ghost commit captured: 169abe9f5ec70e69ee5dd332aa2768f54fe576d2
+2025-12-27T14:00:43.091379Z  INFO ghost snapshot gate marked ready
+2025-12-27T14:00:48.994042Z  INFO ToolCall: shell_command {"command":"rg --files -g 'output.jsonl' /home/pigo/文件/python/PrimeArchive-120B","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T14:00:54.524174Z  INFO ToolCall: shell_command {"command":"sed -n '1,5p' /home/pigo/文件/python/PrimeArchive-120B/output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T14:07:07.995554Z  INFO spawning ghost snapshot task
+2025-12-27T14:07:08.102491Z  INFO ghost snapshot blocking task finished
+2025-12-27T14:07:08.102533Z  INFO ghost commit captured: 8eebe20dc64c217088a88e21a982f945d55e2cf9
+2025-12-27T14:07:08.102547Z  INFO ghost snapshot gate marked ready
+2025-12-27T14:07:13.724466Z  INFO ToolCall: shell_command {"command":"rg --files -g 'TEST-Book2.epub' /home/pigo/文件/python/PrimeArchive-120B","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T14:07:19.663699Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\npython - <<'PY'\nfrom pathlib import Path\nfrom src.services.loader import load_text\n\ntext = load_text(Path(\"/home/pigo/文件/python/PrimeArchive-120B/TEST-Book2.epub\"))\nlines = [line for line in text.splitlines() if line.strip()]\nprint(\"\\n\".join(lines[:20]))\nPY","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T14:09:47.600474Z  INFO spawning ghost snapshot task
+2025-12-27T14:09:47.706573Z  INFO ghost snapshot blocking task finished
+2025-12-27T14:09:47.706633Z  INFO ghost commit captured: cd1298148f85a43c1c59ca320cb6a8258ca85710
+2025-12-27T14:09:47.706648Z  INFO ghost snapshot gate marked ready
+2025-12-27T14:09:57.267379Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/cleaner.py
+@@
+ NOISE_PATTERNS = [
+     re.compile(r"^\s*\d+\s*$"),
+     re.compile(r"^\s*page\s*\d+", re.IGNORECASE),
+     re.compile(r"^\s*\.{3,}\s*$"),
+ ]
++
++
++def _is_toc_block(lines: List[str]) -> bool:
++    if not lines:
++        return False
++    header = lines[0].strip()
++    if "目錄" not in header and "contents" not in header.lower():
++        return False
++    numeric_lines = sum(1 for line in lines[1:] if re.fullmatch(r"\d+", line.strip()))
++    return numeric_lines >= 5
+ 
+ 
+ def clean_lines(lines: List[str]) -> List[str]:
+-    cleaned = []
++    if _is_toc_block(lines):
++        return []
++    cleaned = []
+*** End Patch
+2025-12-27T14:10:04.839998Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/spec.md
+@@
+ - 書籍含有大量腳註或版面噪音時，非正文內容視為噪音並剔除。
++- 目錄頁或大量連續頁碼的索引頁應視為噪音並跳過。
+ - 單段文字超過 1000 字符時，先依標題切分，不足時再以固定長度切分並遵守重試上限。
+*** End Patch
+2025-12-27T14:10:36.777232Z  INFO spawning ghost snapshot task
+2025-12-27T14:10:36.885079Z  INFO ghost snapshot blocking task finished
+2025-12-27T14:10:36.885127Z  INFO ghost commit captured: 53217204487504d7ddd90a41add8fa59d1e7f946
+2025-12-27T14:10:36.885137Z  INFO ghost snapshot gate marked ready
+2025-12-27T14:10:45.801501Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython - <<'PY'\nfrom pathlib import Path\nfrom src.services.loader import load_text\nfrom src.services.cleaner import clean_text\nfrom src.services.chunker import smart_chunk\n\ntext = load_text(Path(\"/home/pigo/文件/python/PrimeArchive-120B/TEST-Book2.epub\"))\ncleaned = clean_text(text)\nchunks = smart_chunk(cleaned)\nprint(f\"cleaned_chars={len(cleaned)} chunks={len(chunks)}\")\nfor idx, chunk in enumerate(chunks[:5], start=1):\n    preview = \" \".join(chunk.split())[:200]\n    print(f\"Chunk {idx} preview: {preview}\")\nPY","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T14:11:05.263709Z  INFO spawning ghost snapshot task
+2025-12-27T14:11:05.377737Z  INFO ghost snapshot blocking task finished
+2025-12-27T14:11:05.377782Z  INFO ghost commit captured: 46cf6f5e8385f03a53ae1ccf81b3b7bbf61bdd72
+2025-12-27T14:11:05.377794Z  INFO ghost snapshot gate marked ready
+2025-12-27T14:11:17.341937Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/cleaner.py
+@@
+-def _is_toc_block(lines: List[str]) -> bool:
++def _is_toc_block(lines: List[str]) -> bool:
+     if not lines:
+         return False
+-    header = lines[0].strip()
++    header = lines[0].strip().lstrip("\ufeff")
+     if "目錄" not in header and "contents" not in header.lower():
+         return False
+-    numeric_lines = sum(1 for line in lines[1:] if re.fullmatch(r"\d+", line.strip()))
+-    return numeric_lines >= 5
++    tail = [line.strip() for line in lines[1:] if line.strip()]
++    if not tail:
++        return False
++    numeric_lines = sum(1 for line in tail if re.fullmatch(r"\d+", line))
++    short_lines = sum(1 for line in tail if len(line) <= 12)
++    title_like = sum(
++        1
++        for line in tail
++        if len(line) <= 30 and not re.search(r"[。！？!?]", line)
++    )
++    total = len(tail)
++    short_ratio = short_lines / total
++    title_ratio = title_like / total
++    return numeric_lines >= 5 or short_ratio >= 0.6 or title_ratio >= 0.6
+*** End Patch
+2025-12-27T14:11:29.620704Z  INFO spawning ghost snapshot task
+2025-12-27T14:11:29.718931Z  INFO ghost snapshot blocking task finished
+2025-12-27T14:11:29.718974Z  INFO ghost commit captured: e2eceb7ee1763f1d5b6e9d97e05b1d3eda4acc90
+2025-12-27T14:11:29.718986Z  INFO ghost snapshot gate marked ready
+2025-12-27T14:11:37.621844Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython - <<'PY'\nfrom pathlib import Path\nfrom src.services.loader import load_text\nfrom src.services.cleaner import clean_text\nfrom src.services.chunker import smart_chunk\n\ntext = load_text(Path(\"/home/pigo/文件/python/PrimeArchive-120B/TEST-Book2.epub\"))\ncleaned = clean_text(text)\nchunks = smart_chunk(cleaned)\nprint(f\"cleaned_chars={len(cleaned)} chunks={len(chunks)}\")\nfor idx, chunk in enumerate(chunks[:5], start=1):\n    preview = \" \".join(chunk.split())[:200]\n    print(f\"Chunk {idx} preview: {preview}\")\nPY","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T14:12:04.761339Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/cleaner.py
+@@
+-def _is_toc_block(lines: List[str]) -> bool:
+-    if not lines:
+-        return False
+-    header = lines[0].strip().lstrip("\ufeff")
+-    if "目錄" not in header and "contents" not in header.lower():
+-        return False
+-    tail = [line.strip() for line in lines[1:] if line.strip()]
+-    if not tail:
+-        return False
+-    numeric_lines = sum(1 for line in tail if re.fullmatch(r"\d+", line))
+-    short_lines = sum(1 for line in tail if len(line) <= 12)
+-    title_like = sum(
+-        1
+-        for line in tail
+-        if len(line) <= 30 and not re.search(r"[。！？!?]", line)
+-    )
+-    total = len(tail)
+-    short_ratio = short_lines / total
+-    title_ratio = title_like / total
+-    return numeric_lines >= 5 or short_ratio >= 0.6 or title_ratio >= 0.6
++def _strip_toc(lines: List[str]) -> List[str]:
++    if not lines:
++        return lines
++    non_empty_indices = [i for i, line in enumerate(lines) if line.strip()]
++    if not non_empty_indices:
++        return lines
++    first_window = non_empty_indices[:50]
++    toc_index = None
++    for idx in first_window:
++        header = lines[idx].strip().lstrip("\ufeff")
++        if "目錄" in header or "contents" in header.lower():
++            toc_index = idx
++            break
++    if toc_index is None:
++        return lines
++    tail = [line.strip() for line in lines[toc_index + 1 :] if line.strip()]
++    if not tail:
++        return lines
++    numeric_lines = sum(1 for line in tail if re.fullmatch(r"\d+", line))
++    short_lines = sum(1 for line in tail if len(line) <= 12)
++    title_like = sum(
++        1
++        for line in tail
++        if len(line) <= 30 and not re.search(r"[。！？!?]", line)
++    )
++    total = len(tail)
++    short_ratio = short_lines / total
++    title_ratio = title_like / total
++    if not (numeric_lines >= 5 or short_ratio >= 0.6 or title_ratio >= 0.6):
++        return lines
++    cutoff = toc_index + 1
++    for idx in range(toc_index + 1, len(lines)):
++        line = lines[idx].strip()
++        if len(line) > 30 and re.search(r"[。！？!?]", line):
++            cutoff = idx
++            break
++    return lines[:toc_index] + lines[cutoff:]
+@@
+ def clean_lines(lines: List[str]) -> List[str]:
+-    if _is_toc_block(lines):
+-        return []
++    lines = _strip_toc(lines)
+     cleaned = []
+*** End Patch
+2025-12-27T14:12:16.122842Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython - <<'PY'\nfrom pathlib import Path\nfrom src.services.loader import load_text\nfrom src.services.cleaner import clean_text\nfrom src.services.chunker import smart_chunk\n\ntext = load_text(Path(\"/home/pigo/文件/python/PrimeArchive-120B/TEST-Book2.epub\"))\ncleaned = clean_text(text)\nchunks = smart_chunk(cleaned)\nprint(f\"cleaned_chars={len(cleaned)} chunks={len(chunks)}\")\nfor idx, chunk in enumerate(chunks[:5], start=1):\n    preview = \" \".join(chunk.split())[:200]\n    print(f\"Chunk {idx} preview: {preview}\")\nPY","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T14:13:28.930188Z  INFO spawning ghost snapshot task
+2025-12-27T14:13:29.042318Z  INFO ghost snapshot blocking task finished
+2025-12-27T14:13:29.042360Z  INFO ghost commit captured: 362027e55bca4cedbdbb7e2c2a14d68917e5e4db
+2025-12-27T14:13:29.042380Z  INFO ghost snapshot gate marked ready
+2025-12-27T22:36:02.942483Z  INFO spawning ghost snapshot task
+2025-12-27T22:36:03.045570Z  INFO ghost snapshot blocking task finished
+2025-12-27T22:36:03.045613Z  INFO ghost commit captured: 04bfbcbb5eb4efce9122a9582c9704273028ed5a
+2025-12-27T22:36:03.045622Z  INFO ghost snapshot gate marked ready
+2025-12-27T22:36:18.456757Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+ debug:
+   dump_chunks: false
+   dump_path: "./data/debug_chunks.txt"
++  print_llm_output: false
+*** End Patch
+2025-12-27T22:36:25.726937Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/generator.py
+@@
+ def generate_units(
+     chunks: List[str],
+     references: List[str],
+     llm_client: Optional[LLMClient] = None,
++    print_llm_output: bool = False,
+ ) -> List[Dict[str, Any]]:
+@@
+-            response = llm_client.generate(system_prompt, user_prompt)
++            response = llm_client.generate(system_prompt, user_prompt)
++            if print_llm_output:
++                print(f\"LLM output (chunk {idx}): {response}\")
+             candidate = response.get("unit") or response
+             try:
+*** End Patch
+2025-12-27T22:36:32.359504Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+-    units = generate_units(chunks, references, llm_client=llm_client)
++    debug_cfg = config.get("debug", {})
++    units = generate_units(
++        chunks,
++        references,
++        llm_client=llm_client,
++        print_llm_output=debug_cfg.get("print_llm_output", False),
++    )
+@@
+-    config = load_config()
+-    debug_cfg = config.get("debug", {})
++    config = load_config()
++    debug_cfg = config.get("debug", {})
+*** End Patch
+2025-12-27T22:36:39.093041Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+ debug:
+   dump_chunks: true
+   dump_path: "./data/debug_chunks.txt"
++  print_llm_output: true
+*** End Patch
+2025-12-27T23:37:34.296291Z  INFO spawning ghost snapshot task
+2025-12-27T23:37:34.444476Z  INFO ghost snapshot blocking task finished
+2025-12-27T23:37:34.444521Z  INFO ghost commit captured: 3ed17a0b367dedf440dc43bba8cc20e06c45c919
+2025-12-27T23:37:34.444533Z  INFO ghost snapshot gate marked ready
+2025-12-27T23:37:47.627375Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+ debug:
+   dump_chunks: false
+   dump_path: "./data/debug_chunks.txt"
+   print_llm_output: false
++  max_chunks: 0
+*** End Patch
+2025-12-27T23:37:58.582978Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+-    parser.add_argument("--dump-chunks", action="store_true")
+-    parser.add_argument("--dump-path", default="")
++    parser.add_argument("--dump-chunks", action="store_true")
++    parser.add_argument("--dump-path", default="")
++    parser.add_argument("--max-chunks", type=int, default=0)
+@@
+-    debug_cfg = config.get("debug", {})
+-    dump_chunks = args.dump_chunks or debug_cfg.get("dump_chunks", False)
+-    dump_path = args.dump_path or debug_cfg.get("dump_path", "")
+-    dump_path_value = pathlib.Path(dump_path) if dump_path else None
++    debug_cfg = config.get("debug", {})
++    dump_chunks = args.dump_chunks or debug_cfg.get("dump_chunks", False)
++    dump_path = args.dump_path or debug_cfg.get("dump_path", "")
++    dump_path_value = pathlib.Path(dump_path) if dump_path else None
++    max_chunks = args.max_chunks or debug_cfg.get("max_chunks", 0)
+@@
+-    run_pipeline(
+-        input_path,
+-        output_path,
+-        dump_chunks=dump_chunks,
+-        dump_path=dump_path_value,
+-    )
++    run_pipeline(
++        input_path,
++        output_path,
++        dump_chunks=dump_chunks,
++        dump_path=dump_path_value,
++        max_chunks=max_chunks,
++    )
+*** End Patch
+2025-12-27T23:38:04.829296Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py
+@@
+ def run_pipeline(
+     input_path: pathlib.Path,
+     output_path: pathlib.Path,
+     log_callback: Optional[Callable[[str], None]] = None,
+     progress_callback: Optional[Callable[[int, str], None]] = None,
+     dump_chunks: bool = False,
+     dump_path: Optional[pathlib.Path] = None,
++    max_chunks: int = 0,
+ ) -> None:
+@@
+-    chunks = smart_chunk(cleaned)
++    chunks = smart_chunk(cleaned)
++    if max_chunks and max_chunks > 0:
++        chunks = chunks[:max_chunks]
+     safe_log("pipeline.chunked", {"chunks": len(chunks)})
+*** End Patch
+2025-12-27T23:38:13.943088Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py
+@@
+-    job_manager.run_in_thread(
++    config = load_config()
++    debug_cfg = config.get("debug", {})
++    max_chunks = debug_cfg.get("max_chunks", 0)
++    job_manager.run_in_thread(
+         job.job_id,
+         run_pipeline,
+         pathlib.Path(input_path),
+         pathlib.Path(output_path),
+         lambda msg: job_manager.append_log(job.job_id, msg),
+         lambda progress, step: job_manager.update_job(
+             job.job_id, progress=progress, last_step=step
+         ),
+         dump_chunks,
+         pathlib.Path(dump_path) if dump_path else None,
++        max_chunks,
+     )
+*** End Patch
+2025-12-27T23:38:21.419131Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+ debug:
+   dump_chunks: true
+   dump_path: "./data/debug_chunks.txt"
+   print_llm_output: true
++  max_chunks: 5
+@@
+ Or via CLI flags (prints to screen; optional file):
+ 
+ ```bash
+-python -m src.cli.pipeline --input /path/to/book.epub --format epub --output /tmp/output.jsonl --dump-chunks --dump-path /tmp/chunks.txt
++python -m src.cli.pipeline --input /path/to/book.epub --format epub --output /tmp/output.jsonl --dump-chunks --dump-path /tmp/chunks.txt --max-chunks 5
+ ```
+*** End Patch
+2025-12-27T23:38:32.683397Z  INFO ToolCall: shell_command {"command":"rg -n \"debug_cfg|max_chunks|dump_chunks\" /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-27T23:38:42.717834Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/cli/admin.py
+@@
+-    config = load_config()
+-    debug_cfg = config.get("debug", {})
+-    dump_chunks = debug_cfg.get("dump_chunks", False)
+-    dump_path = debug_cfg.get("dump_path", "")
+-    config = load_config()
+-    debug_cfg = config.get("debug", {})
+-    max_chunks = debug_cfg.get("max_chunks", 0)
++    config = load_config()
++    debug_cfg = config.get("debug", {})
++    dump_chunks = debug_cfg.get("dump_chunks", False)
++    dump_path = debug_cfg.get("dump_path", "")
++    max_chunks = debug_cfg.get("max_chunks", 0)
+*** End Patch
+2025-12-27T23:38:49.682137Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/specs/001-universal-book-rag/tasks.md
+@@
+ - [X] T047 [P] Persist job logs to files in `src/services/job_manager.py`
+ - [X] T048 [P] Add optional chunk dump for debugging in `src/cli/pipeline.py`
++- [X] T049 [P] Add max-chunks limiter for debugging in `src/cli/pipeline.py`
+*** End Patch
+2025-12-27T23:38:56.550801Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/README.md
+@@
+ debug:
+   dump_chunks: true
+   dump_path: "./data/debug_chunks.txt"
+   print_llm_output: true
+   max_chunks: 5
++  # max_chunks: 0 means all chunks
+*** End Patch
+2025-12-27T23:40:13.077204Z  INFO spawning ghost snapshot task
+2025-12-27T23:40:13.199588Z  INFO ghost snapshot blocking task finished
+2025-12-27T23:40:13.199635Z  INFO ghost commit captured: 7fdac0bec69c7480f568d8f7d5d4577eb4802a29
+2025-12-27T23:40:13.199647Z  INFO ghost snapshot gate marked ready
+2025-12-27T23:40:19.898546Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book3.epub --format epub --output /tmp/test-book3-output.jsonl --max-chunks 5 --dump-chunks","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":300000}
+2025-12-27T23:40:31.061044Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/generator.py
+@@
+-            if print_llm_output:
+-                print(f\"LLM output (chunk {idx}): {response}\")
++            if print_llm_output:
++                print(f"LLM output (chunk {idx}): {response}")
+*** End Patch
+2025-12-27T23:40:37.307418Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book3.epub --format epub --output /tmp/test-book3-output.jsonl --max-chunks 5 --dump-chunks","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":300000}
+2025-12-27T23:45:39.433434Z  INFO spawning ghost snapshot task
+2025-12-27T23:45:39.546359Z  INFO ghost snapshot blocking task finished
+2025-12-27T23:45:39.546403Z  INFO ghost commit captured: 60a815138486f4d00022300eadd2a205b7dbd57e
+2025-12-27T23:45:39.546412Z  INFO ghost snapshot gate marked ready
+2025-12-27T23:47:13.491916Z  INFO spawning ghost snapshot task
+2025-12-27T23:47:13.613566Z  INFO ghost snapshot blocking task finished
+2025-12-27T23:47:13.613612Z  INFO ghost commit captured: 2341efea2c7a0da383098ad6f125b59d09b83759
+2025-12-27T23:47:13.613622Z  INFO ghost snapshot gate marked ready
+2025-12-27T23:47:22.415509Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+ debug:
+   dump_chunks: false
+   dump_path: "./data/debug_chunks.txt"
+-  print_llm_output: false
++  print_llm_output: true
+   max_chunks: 0
+*** End Patch
+2025-12-27T23:47:28.865204Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book3.epub --format epub --output /tmp/test-book3-output.jsonl --max-chunks 5","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務以觀察模型原始輸出。","timeout_ms":300000}
+2025-12-27T23:49:07.486873Z  INFO spawning ghost snapshot task
+2025-12-27T23:49:07.606560Z  INFO ghost snapshot blocking task finished
+2025-12-27T23:49:07.606615Z  INFO ghost commit captured: 66756ec5f1493de60049f9bed8d56ee99e0c6e17
+2025-12-27T23:49:07.606628Z  INFO ghost snapshot gate marked ready
+2025-12-27T23:49:18.538935Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md
+@@
+-請處理以下文本段落：
++請處理以下文本段落：
+ ---
+ {text_chunk}
+ ---
+ 
+ 輸出要求：
+-請分析這段文本，提取出核心知識點並輸出為 JSON 格式。
+-JSON 應包含：concept、description、application、tags（list）、
+-type（concept|procedure|case_study）、reference。
++請分析這段文本，提取出核心知識點並輸出為單一 JSON 物件（不要用陣列）。
++JSON 僅允許以下欄位：
++- concept: string
++- description: string
++- application: string
++- tags: string[]
++- type: "concept" | "procedure" | "case_study"
++- reference: string
++
++嚴格要求：
++1) 只輸出 JSON 物件本身，不要 markdown code block。
++2) application 與 reference 必須是字串（不可使用物件或陣列）。
++3) tags 必須是字串陣列，不可巢狀。
+*** End Patch
+2025-12-27T23:49:28.369588Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/llm_client.py
+@@
+ def _parse_json_content(content: str) -> Optional[Dict[str, Any]]:
+-    try:
+-        return json.loads(content)
+-    except json.JSONDecodeError:
+-        if "{" in content and "}" in content:
+-            start = content.find("{")
+-            end = content.rfind("}")
+-            snippet = content[start : end + 1]
+-            try:
+-                return json.loads(snippet)
+-            except json.JSONDecodeError:
+-                return None
+-    return None
++    cleaned = content.strip()
++    if cleaned.startswith("```"):
++        cleaned = cleaned.strip("`")
++        cleaned = cleaned.replace("json", "", 1).strip()
++    try:
++        return json.loads(cleaned)
++    except json.JSONDecodeError:
++        if "{" in cleaned and "}" in cleaned:
++            start = cleaned.find("{")
++            end = cleaned.rfind("}")
++            snippet = cleaned[start : end + 1]
++            try:
++                return json.loads(snippet)
++            except json.JSONDecodeError:
++                return None
++    return None
+*** End Patch
+2025-12-27T23:49:42.349612Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/generator.py
+@@
+-from src.services.llm_client import LLMClient
++from src.services.llm_client import LLMClient
+ from src.services.prompting import build_prompt
+ 
+ 
+ REQUIRED_FIELDS = {"concept", "description", "application", "tags", "type"}
+ OPTIONAL_FIELDS = {"confidence", "reference"}
+ 
+ 
+-def _sanitize_unit(unit: Dict[str, Any], reference: str) -> Dict[str, Any]:
+-    cleaned = {k: v for k, v in unit.items() if k in REQUIRED_FIELDS | OPTIONAL_FIELDS}
++def _normalize_tags(tags: Any) -> List[str]:
++    if isinstance(tags, list):
++        flattened: List[str] = []
++        for item in tags:
++            if isinstance(item, list):
++                flattened.extend(str(sub).strip() for sub in item)
++            else:
++                flattened.append(str(item).strip())
++        return [tag for tag in flattened if tag]
++    if tags is None:
++        return []
++    return [str(tags).strip()]
++
++
++def _stringify(value: Any) -> str:
++    if value is None:
++        return ""
++    if isinstance(value, (dict, list)):
++        return json.dumps(value, ensure_ascii=False)
++    return str(value)
++
++
++def _sanitize_unit(unit: Dict[str, Any], reference: str) -> Dict[str, Any]:
++    cleaned = {k: v for k, v in unit.items() if k in REQUIRED_FIELDS | OPTIONAL_FIELDS}
++    if "tags" in cleaned:
++        cleaned["tags"] = _normalize_tags(cleaned["tags"])
++    if "application" in cleaned:
++        cleaned["application"] = _stringify(cleaned["application"])
++    if "reference" in cleaned:
++        cleaned["reference"] = _stringify(cleaned["reference"])
+     if "reference" not in cleaned:
+         cleaned["reference"] = reference
+     if not REQUIRED_FIELDS.issubset(cleaned.keys()):
+         raise ValueError("Missing required fields")
+     return cleaned
+@@
+-            candidate = response.get("unit") or response
++            candidate = response.get("unit") or response
++            if isinstance(candidate, list) and candidate:
++                candidate = candidate[0]
+             try:
+                 unit = _sanitize_unit(candidate, reference)
+             except ValueError:
+                 unit = _fallback_unit(chunk, reference)
+*** End Patch
+2025-12-27T23:49:48.235821Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/src/services/generator.py
+@@
+-from __future__ import annotations
+-
+-from typing import List, Dict, Any, Optional
++from __future__ import annotations
++
++import json
++from typing import List, Dict, Any, Optional
+*** End Patch
+2025-12-27T23:50:11.174031Z  INFO spawning ghost snapshot task
+2025-12-27T23:50:11.298196Z  INFO ghost snapshot blocking task finished
+2025-12-27T23:50:11.298238Z  INFO ghost commit captured: e95da8da06af0bdb26c510aa67277afc09e404ea
+2025-12-27T23:50:11.298248Z  INFO ghost snapshot gate marked ready
+2025-12-27T23:50:18.854825Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book3.epub --format epub --output /tmp/test-book3-output.jsonl --max-chunks 5","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":300000}
+2025-12-28T00:00:11.500271Z  INFO spawning ghost snapshot task
+2025-12-28T00:00:11.624584Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:00:11.624645Z  INFO ghost commit captured: 0b5b59672063e21c90a900e416710fd543ee3fb9
+2025-12-28T00:00:11.624711Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:00:19.828465Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/configs/config.yaml
+@@
+-  model_name: "ministral-3:3b-cloud"
++  model_name: "ministral-3:8b-cloud"
+*** End Patch
+2025-12-28T00:00:27.713832Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: /home/pigo/文件/python/PrimeArchive-120B/prompts/prompt_template.md
+@@
+ 請遵循以下規則：
+ 1. **忠於原文**：嚴禁虛構書中未提及的規則。
+ 2. **場景化**：為每個知識點設想一個真實的寫作或應用場景。
+ 3. **標籤化**：提取 3-5 個階層式的標籤（如：文法 > 動詞 > 時態）。
+ 4. **輸出格式**：必須嚴格遵守 JSON 格式與欄位定義。
++5. **語言**：輸出內容必須使用繁體中文或英文，禁止其他語言。
+*** End Patch
+2025-12-28T00:00:54.170644Z  INFO spawning ghost snapshot task
+2025-12-28T00:00:54.290096Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:00:54.290138Z  INFO ghost commit captured: 7a9a18c81eff330f182651760a418ae2ec21f984
+2025-12-28T00:00:54.290149Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:01:00.687922Z  INFO ToolCall: shell_command {"command":". .venv/bin/activate\nexport PYTHONPATH=.\npython -m src.cli.pipeline --input /home/pigo/文件/python/PrimeArchive-120B/TEST-Book3.epub --format epub --output /tmp/test-book3-output.jsonl --max-chunks 5","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"需要連線到本機 Ollama 服務進行管線測試。","timeout_ms":300000}
+2025-12-28T00:04:01.394169Z  INFO spawning ghost snapshot task
+2025-12-28T00:04:01.513192Z  INFO ghost snapshot blocking task finished
+2025-12-28T00:04:01.513238Z  INFO ghost commit captured: 62c84d2ec428ab768c1736addf874a6ffa8102ea
+2025-12-28T00:04:01.513250Z  INFO ghost snapshot gate marked ready
+2025-12-28T00:04:07.873334Z  INFO ToolCall: shell_command {"command":"sed -n '1,5p' /tmp/test-book3-output.jsonl","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}

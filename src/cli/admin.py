@@ -121,6 +121,11 @@ def run_job(
             f"<p>Input file not found: {input_path}</p>", status_code=400
         )
     job = job_manager.create_job(input_path, output_path, file_format)
+    config = load_config()
+    debug_cfg = config.get("debug", {})
+    dump_chunks = debug_cfg.get("dump_chunks", False)
+    dump_path = debug_cfg.get("dump_path", "")
+    max_chunks = debug_cfg.get("max_chunks", 0)
     job_manager.run_in_thread(
         job.job_id,
         run_pipeline,
@@ -130,6 +135,9 @@ def run_job(
         lambda progress, step: job_manager.update_job(
             job.job_id, progress=progress, last_step=step
         ),
+        dump_chunks,
+        pathlib.Path(dump_path) if dump_path else None,
+        max_chunks,
     )
     return HTMLResponse(
         f"<p>Job started: {job.job_id}</p><p><a href='/'>Back</a></p>",

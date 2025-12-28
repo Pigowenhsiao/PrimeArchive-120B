@@ -149,6 +149,8 @@ description: "Task list template for feature implementation"
 - [X] T045 [P] Add UI progress/log updates and output preview endpoints in `src/cli/admin.py`
 - [X] T046 [P] Add auto-refresh UI and progress bar in `src/cli/admin.py`
 - [X] T047 [P] Persist job logs to files in `src/services/job_manager.py`
+- [X] T048 [P] Add optional chunk dump for debugging in `src/cli/pipeline.py`
+- [X] T049 [P] Add max-chunks limiter for debugging in `src/cli/pipeline.py`
 
 ---
 

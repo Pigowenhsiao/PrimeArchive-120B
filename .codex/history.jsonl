@@ -64,3 +64,23 @@
 {"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842547,"text":"再加「進度條百分比動畫」「工作紀錄保留到檔案」「UI 自動刷新」"}
 {"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842661,"text":"模型改用　ministral-3:3b-cloud"}
 {"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766842681,"text":"請測試"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766843436,"text":"Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py\", line 108, in <module>\n    main()\n  File \"/home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py\", line 104, in main\n    run_pipeline(input_path, output_path)\n  File \"/home/pigo/文件/python/PrimeArchive-120B/src/cli/pipeline.py\", line 80, in run_pipeline\n    validate_payload(unit, schema)\n  File \"/home/pigo/文件/python/PrimeArchive-120B/src/lib/schema.py\", line 25, in validate_payload\n    raise ValueError(f\"Schema validation failed: {messages}\")\nValueError: Schema validation failed: 'concept' is a required property; 'description' is a required property; 'application' is a required property; 'tags' is a required property; 'type' is a required property; Additional properties are not allowed ('raw' was unexpected)"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766843512,"text":"我想知道Chunk 切割的狀況！～可以增加一個輸出讓我debug 之後會拿掉！給我一個開關好了！"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766843597,"text":"chunk 直接成現在螢幕上即可"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766844042,"text":"請讀取　目錄下的output.jsonl 確認輸出結果"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766844427,"text":"解讀目錄中TEST-Book2.epub 是否適合這樣的拆解"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766844587,"text":"加入「目錄頁過濾規則」"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766844636,"text":"用 TEST-Book2.epub 重新跑並檢視清洗後的 chunk分析是否適合這樣的程式碼分析"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766844665,"text":"請加強"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766844689,"text":"再次檢視"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766844808,"text":"程式碼已經啟用？"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766874962,"text":"可以把 AI 模型的輸出也印出來嘛？"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766878654,"text":"請幫我先限制只做前面五個Chunk 或者給我一個參數讓我自己選擇　1-All"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766878813,"text":"請用目錄下的TEST-Book3.epub 測試"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766879139,"text":"but the output not meet our requirement can you find why?"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766879233,"text":"please help me to check and do item 1 and 2"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766879347,"text":"Please fix it from 1 to 3"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766879411,"text":"please run test for me"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766880011,"text":"把模型改成ministral-3:8b-cloud 另外幫我要求我ai 資料回覆都需要使用繁體中文或者英文！"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766880054,"text":"請測試"}
+{"session_id":"019b5fab-782d-77f1-9187-b9f3c7d1f2e2","ts":1766880241,"text":"請顯示回應的內容"}

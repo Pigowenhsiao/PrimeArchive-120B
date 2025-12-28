@@ -40,6 +40,9 @@ def run_pipeline(
     output_path: pathlib.Path,
     log_callback: Optional[Callable[[str], None]] = None,
     progress_callback: Optional[Callable[[int, str], None]] = None,
+    dump_chunks: bool = False,
+    dump_path: Optional[pathlib.Path] = None,
+    max_chunks: int = 0,
 ) -> None:
     config = load_config()
     llm_settings = config.get("llm_settings", {})
@@ -68,10 +71,34 @@ def run_pipeline(
     safe_log("pipeline.cleaned", {"chars": len(cleaned)})
     _emit("Cleaned text", 30, log_callback, progress_callback)
     chunks = smart_chunk(cleaned)
+    if max_chunks and max_chunks > 0:
+        chunks = chunks[:max_chunks]
     safe_log("pipeline.chunked", {"chunks": len(chunks)})
     _emit(f"Chunked text into {len(chunks)} parts", 45, log_callback, progress_callback)
+    if dump_chunks:
+        for idx, chunk in enumerate(chunks, start=1):
+            print(f"## Chunk {idx}\n{chunk}\n")
+        if dump_path:
+            dump_path.parent.mkdir(parents=True, exist_ok=True)
+            with dump_path.open("w", encoding="utf-8") as handle:
+                for idx, chunk in enumerate(chunks, start=1):
+                    handle.write(f"## Chunk {idx}\n")
+                    handle.write(chunk)
+                    handle.write("\n\n")
+            _emit(
+                f"Chunk dump saved to {dump_path}",
+                48,
+                log_callback,
+                progress_callback,
+            )
     references = build_references(chunks)
-    units = generate_units(chunks, references, llm_client=llm_client)
+    debug_cfg = config.get("debug", {})
+    units = generate_units(
+        chunks,
+        references,
+        llm_client=llm_client,
+        print_llm_output=debug_cfg.get("print_llm_output", False),
+    )
     safe_log("pipeline.generated", {"units": len(units)})
     _emit(f"Generated {len(units)} units", 70, log_callback, progress_callback)
 
@@ -96,12 +123,28 @@ def main() -> None:
     parser.add_argument("--input", required=True)
     parser.add_argument("--format", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--dump-chunks", action="store_true")
+    parser.add_argument("--dump-path", default="")
+    parser.add_argument("--max-chunks", type=int, default=0)
     args = parser.parse_args()
 
     input_path = pathlib.Path(args.input)
     output_path = pathlib.Path(args.output)
 
-    run_pipeline(input_path, output_path)
+    config = load_config()
+    debug_cfg = config.get("debug", {})
+    dump_chunks = args.dump_chunks or debug_cfg.get("dump_chunks", False)
+    dump_path = args.dump_path or debug_cfg.get("dump_path", "")
+    dump_path_value = pathlib.Path(dump_path) if dump_path else None
+    max_chunks = args.max_chunks or debug_cfg.get("max_chunks", 0)
+
+    run_pipeline(
+        input_path,
+        output_path,
+        dump_chunks=dump_chunks,
+        dump_path=dump_path_value,
+        max_chunks=max_chunks,
+    )
 
 
 if __name__ == "__main__":

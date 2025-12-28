@@ -9,7 +9,7 @@ project:
 # 1. 本地 LLM 配置 (Ollama / Local API)
 # ------------------------------------------
 llm_settings:
-  model_name: "ministral-3:3b-cloud"
+  model_name: "ministral-3:8b-cloud"
   base_url: "http://127.0.0.1:11434" # Ollama 默認路徑
   temperature: 0.1                      # 低隨機性，確保事實準確
   num_ctx: 8192                         # 上下文窗口限制
@@ -44,6 +44,15 @@ chunking:
     legal:                              # 條文/法律
       size: 600
       overlap: 50
+
+# ------------------------------------------
+# 3.1 Chunk Debug
+# ------------------------------------------
+debug:
+  dump_chunks: false
+  dump_path: "./data/debug_chunks.txt"
+  print_llm_output: true
+  max_chunks: 0
 
 # ------------------------------------------
 # 3. 數據契約規格 (Data Schema Enforcement)
