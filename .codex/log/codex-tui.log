@@ -5394,6 +5394,7 @@
 +        <pre id="job-log" style="white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--panel-strong); padding: 12px; border-radius: 12px; border: 1px solid var(--line); min-height: 160px; max-height: 280px; overflow-y: auto;">尚未載入。</pre>
        </div>
 *** End Patch
+<<<<<<< HEAD
 2025-12-28T02:13:19.011926Z  INFO spawning ghost snapshot task
 2025-12-28T02:13:19.098482Z  INFO ghost snapshot blocking task finished
 2025-12-28T02:13:19.098604Z  INFO ghost commit captured: 3143bdc9ea73a2a66e6131df2cb650802aa85b78
@@ -5539,3 +5540,5 @@
 +overrides, max-chunk limiter, chunk/LLM debug toggles, and JSONL validation
 +via file picker.
 *** End Patch
+=======
+>>>>>>> 6992d7e8ff6687c4eb8c6a812dc67ade25ae47af
