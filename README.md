@@ -51,15 +51,16 @@ python -m src.cli.admin --host 127.0.0.1 --port 8000
 
 Open http://127.0.0.1:8000 to submit jobs and view status.
 You can select files via the browser file picker or provide a local path.
-The UI auto-refreshes, shows a progress bar, last step, output preview/download,
-and Ollama status.
+The UI updates in place and shows status, progress, output preview/download,
+Ollama status, and an info panel with live job logs.
 
 Job logs are stored in `data/job_logs/` per job ID.
 
 ### Admin UI Controls
 
 - Model name override
+- Model selection dropdown (from Ollama tags)
 - Temperature/timeout overrides
 - Max chunks limiter (0 = all)
 - Chunk dump / LLM output toggles
-- Validate JSONL file (hallucination rate)
+- Validate JSONL file (hallucination rate, via file picker)
