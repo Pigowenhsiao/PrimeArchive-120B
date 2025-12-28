@@ -4972,3 +4972,72 @@
 -        <p>本地管線監控與資料輸出入口 · 閒置 8 秒自動刷新</p>
 +        <p>本地管線監控與資料輸出入口 · 即時狀態更新</p>
 *** End Patch
+2025-12-28T01:24:26.492599Z  INFO spawning ghost snapshot task
+2025-12-28T01:24:26.549707Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:24:26.549746Z  INFO ghost commit captured: 364b075a4c7dc95ba02eeca2127836ff7ca736e6
+2025-12-28T01:24:26.549757Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:24:55.291197Z  INFO spawning ghost snapshot task
+2025-12-28T01:24:55.359530Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:24:55.359566Z  INFO ghost commit captured: 01e4e4394f20b6a2e60b9b9c775231850b00104e
+2025-12-28T01:24:55.359576Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:25:07.801257Z  INFO spawning ghost snapshot task
+2025-12-28T01:25:07.900931Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:25:07.900974Z  INFO ghost commit captured: b19463747e7d958c8cf8cda3fc3a6f6ca52ba280
+2025-12-28T01:25:07.900986Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:25:16.647123Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/admin.py
+@@
+       <div class="card">
+         <h2>驗證工具</h2>
+         <p>以 JSONL 檢測引用準確度並產出 hallucination rate。</p>
+         <form method='post' action='/validate' enctype='multipart/form-data' id="validate-form">
+-          <label>JSONL 檔案路徑</label>
+-          <input name='validate_path' placeholder='/tmp/output.jsonl' id="validate_path" required />
+-          <label>或上傳 JSONL 檔案</label>
+-          <input name='validate_file' type='file' id="validate_file" />
++          <label>選擇 JSONL 檔案</label>
++          <input name='validate_file' type='file' id="validate_file" required />
+           <button type='submit'>執行驗證</button>
+         </form>
+       </div>
+@@
+-    const validatePathInput = document.getElementById("validate_path");
+     const pipelineForm = document.getElementById("pipeline-form");
+@@
+-    validateFileInput?.addEventListener("change", () => {{
+-      if (!validateFileInput.files || validateFileInput.files.length === 0) {{
+-        return;
+-      }}
+-      const file = validateFileInput.files[0];
+-      if (file && validatePathInput && (!validatePathInput.value || validatePathInput.value.trim() === "")) {{
+-        validatePathInput.value = file.name;
+-      }}
+-    }});
+   </script>
+ </body>
+ </html>
+ """
+*** End Patch
+2025-12-28T01:25:23.456472Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/admin.py
+@@
+ def validate_output(
+-    validate_path: str = Form(""),
+     validate_file: UploadFile | None = File(None),
+ ) -> HTMLResponse:
+     uploads_dir = pathlib.Path("data/uploads")
+     uploads_dir.mkdir(parents=True, exist_ok=True)
+     path: pathlib.Path
+     if validate_file is not None and validate_file.filename:
+         target = uploads_dir / validate_file.filename
+         content = validate_file.file.read()
+         target.write_bytes(content)
+         path = target
+     else:
+-        if not validate_path:
+-            return HTMLResponse("<p>No validation file provided.</p>", status_code=400)
+-        path = pathlib.Path(validate_path)
+-        if not path.exists():
+-            return HTMLResponse("<p>Validation file not found.</p>", status_code=400)
++        return HTMLResponse("<p>No validation file provided.</p>", status_code=400)
+*** End Patch

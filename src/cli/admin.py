@@ -345,10 +345,8 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
         <h2>驗證工具</h2>
         <p>以 JSONL 檢測引用準確度並產出 hallucination rate。</p>
         <form method='post' action='/validate' enctype='multipart/form-data' id="validate-form">
-          <label>JSONL 檔案路徑</label>
-          <input name='validate_path' placeholder='/tmp/output.jsonl' id="validate_path" required />
-          <label>或上傳 JSONL 檔案</label>
-          <input name='validate_file' type='file' id="validate_file" />
+          <label>選擇 JSONL 檔案</label>
+          <input name='validate_file' type='file' id="validate_file" required />
           <button type='submit'>執行驗證</button>
         </form>
       </div>
@@ -384,7 +382,6 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
     const uploadInput = document.getElementById("upload_file");
     const pathInput = document.getElementById("input_path");
     const validateFileInput = document.getElementById("validate_file");
-    const validatePathInput = document.getElementById("validate_path");
     const pipelineForm = document.getElementById("pipeline-form");
     const jobStatus = document.getElementById("job-status");
     const jobProgress = document.getElementById("job-progress");
@@ -472,15 +469,6 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
       }}
     }});
 
-    validateFileInput?.addEventListener("change", () => {{
-      if (!validateFileInput.files || validateFileInput.files.length === 0) {{
-        return;
-      }}
-      const file = validateFileInput.files[0];
-      if (file && validatePathInput && (!validatePathInput.value || validatePathInput.value.trim() === "")) {{
-        validatePathInput.value = file.name;
-      }}
-    }});
   </script>
 </body>
 </html>
@@ -623,7 +611,6 @@ def download_output(job_id: str) -> FileResponse:
 
 @app.post("/validate")
 def validate_output(
-    validate_path: str = Form(""),
     validate_file: UploadFile | None = File(None),
 ) -> HTMLResponse:
     uploads_dir = pathlib.Path("data/uploads")
@@ -635,11 +622,7 @@ def validate_output(
         target.write_bytes(content)
         path = target
     else:
-        if not validate_path:
-            return HTMLResponse("<p>No validation file provided.</p>", status_code=400)
-        path = pathlib.Path(validate_path)
-        if not path.exists():
-            return HTMLResponse("<p>Validation file not found.</p>", status_code=400)
+        return HTMLResponse("<p>No validation file provided.</p>", status_code=400)
     try:
         rate = run_validation(path)
     except Exception as exc:
