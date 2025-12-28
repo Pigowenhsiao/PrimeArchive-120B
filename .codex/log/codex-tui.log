@@ -5041,3 +5041,356 @@
 -            return HTMLResponse("<p>Validation file not found.</p>", status_code=400)
 +        return HTMLResponse("<p>No validation file provided.</p>", status_code=400)
 *** End Patch
+2025-12-28T01:44:24.282219Z  INFO spawning ghost snapshot task
+2025-12-28T01:44:24.349634Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:44:24.349680Z  INFO ghost commit captured: 0ddb935564dd7c6f306b08787fea486bc6cbfabd
+2025-12-28T01:44:24.349689Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:44:34.970617Z  INFO ToolCall: shell_command {"command":"python scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/algorithmic-art","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:47:30.287322Z  INFO ToolCall: shell_command {"command":"python3 scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/algorithmic-art","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:47:59.268883Z  INFO ToolCall: shell_command {"command":"rg --files -g 'install-skill-from-github.py'","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T01:48:03.159975Z  INFO ToolCall: shell_command {"command":"ls -la /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T01:48:06.436742Z  INFO ToolCall: shell_command {"command":"ls -la /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T01:48:11.405917Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/algorithmic-art","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:48:26.261837Z  INFO spawning ghost snapshot task
+2025-12-28T01:48:26.360497Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:48:26.360547Z  INFO ghost commit captured: 2b68ecfef6d4c1b85c27c620ae1d0efa637ba6a6
+2025-12-28T01:48:26.360559Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:48:30.403291Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/brand-guidelines","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:49:48.190467Z  INFO spawning ghost snapshot task
+2025-12-28T01:49:48.249534Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:49:48.249586Z  INFO ghost commit captured: 6c7b761eddb75ecd0492a15eb3eb5272b8278ad0
+2025-12-28T01:49:48.249599Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:49:53.844832Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/canvas-design","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:50:13.072131Z  WARN failed to paste image: no image on clipboard: The clipboard contents were not available in the requested format or the clipboard is empty.
+2025-12-28T01:50:18.972734Z  INFO spawning ghost snapshot task
+2025-12-28T01:50:19.233553Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:50:19.233705Z  INFO ghost commit captured: 6dac65862102ad8cbeea3a5c848f3492dc999077
+2025-12-28T01:50:19.233728Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:50:23.353910Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/doc-coauthoring","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:50:48.127155Z  INFO spawning ghost snapshot task
+2025-12-28T01:50:48.217383Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:50:48.217548Z  INFO ghost commit captured: b43a79517b1c33a788b2d0e520eb544dbbcd8ea1
+2025-12-28T01:50:48.217571Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:50:53.051052Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/docx","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:51:19.303926Z  INFO spawning ghost snapshot task
+2025-12-28T01:51:19.444952Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:51:19.445271Z  INFO ghost commit captured: 8318cd9e9e9778422a0e3f02c77f9be997328d89
+2025-12-28T01:51:19.445362Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:51:24.599066Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/internal-comms","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:51:44.111162Z  INFO spawning ghost snapshot task
+2025-12-28T01:51:44.234710Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:51:44.234948Z  INFO ghost commit captured: 9e48c70fa4381b6a98d58196ccf7207992d35d46
+2025-12-28T01:51:44.234996Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:51:47.735612Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/mcp-builder","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:53:56.590917Z  INFO spawning ghost snapshot task
+2025-12-28T01:53:56.704297Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:53:56.704509Z  INFO ghost commit captured: 054919b105da3318bdff20808f358cebb11afcb7
+2025-12-28T01:53:56.704548Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:54:02.295503Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/pdf","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:54:24.732466Z  INFO spawning ghost snapshot task
+2025-12-28T01:54:24.849792Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:54:24.850027Z  INFO ghost commit captured: 67bae261ce5216bf9f599b107dde742fe4c0772b
+2025-12-28T01:54:24.850093Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:54:29.637224Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/pptx","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:54:45.037705Z  INFO spawning ghost snapshot task
+2025-12-28T01:54:45.169330Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:54:45.169617Z  INFO ghost commit captured: f61c664c2ef300880a757376392bd0dd9185e9d4
+2025-12-28T01:54:45.169647Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:55:03.570283Z  INFO spawning ghost snapshot task
+2025-12-28T01:55:03.704510Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:55:03.704858Z  INFO ghost commit captured: a0dd8e8ed007546082bedf13c7815c23a746ab76
+2025-12-28T01:55:03.704909Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:55:08.550913Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/slack-gif-creator","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:55:21.572395Z  INFO spawning ghost snapshot task
+2025-12-28T01:55:21.706882Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:55:21.707261Z  INFO ghost commit captured: 44ec41803fc9957b528463685f7518181f9dd7be
+2025-12-28T01:55:21.707327Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:55:25.755545Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/theme-factory","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:55:37.455324Z  INFO spawning ghost snapshot task
+2025-12-28T01:55:37.603912Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:55:37.604217Z  INFO ghost commit captured: ac3d53723420f8e58e215536273de0ebfd56fe83
+2025-12-28T01:55:37.604258Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:55:41.629918Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/web-artifacts-builder","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:55:58.023433Z  INFO spawning ghost snapshot task
+2025-12-28T01:55:58.168402Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:55:58.168741Z  INFO ghost commit captured: 49472b7ea87d4ac92e06b1afa5face0bd3343626
+2025-12-28T01:55:58.168789Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:56:03.440839Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/webapp-testing","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T01:56:14.990988Z  INFO spawning ghost snapshot task
+2025-12-28T01:56:15.133670Z  INFO ghost snapshot blocking task finished
+2025-12-28T01:56:15.134024Z  INFO ghost commit captured: 1349c56461345ec3b5bd58a386a414973c66770d
+2025-12-28T01:56:15.134090Z  INFO ghost snapshot gate marked ready
+2025-12-28T01:56:20.950866Z  INFO ToolCall: shell_command {"command":"python3 /home/pigo/文件/python/PrimeArchive-120B/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --url https://github.com/anthropics/skills/tree/main/skills/xlsx","workdir":"/home/pigo/文件/python/PrimeArchive-120B","sandbox_permissions":"require_escalated","justification":"Install the requested skill from GitHub, which requires network access."}
+2025-12-28T02:02:19.425082Z  INFO spawning ghost snapshot task
+2025-12-28T02:02:19.636807Z  INFO ghost snapshot blocking task finished
+2025-12-28T02:02:19.637191Z  INFO ghost commit captured: 6528bdac33833a786d970b970289cf4866786507
+2025-12-28T02:02:19.637279Z  INFO ghost snapshot gate marked ready
+2025-12-28T02:02:43.172017Z  WARN failed to paste image: no image on clipboard: The clipboard contents were not available in the requested format or the clipboard is empty.
+2025-12-28T02:02:50.312475Z  INFO spawning ghost snapshot task
+2025-12-28T02:02:50.497884Z  INFO ghost snapshot blocking task finished
+2025-12-28T02:02:50.498217Z  INFO ghost commit captured: 55939bda77bfe965f225731e3e64f602b87e0046
+2025-12-28T02:02:50.498306Z  INFO ghost snapshot gate marked ready
+2025-12-28T02:02:58.490951Z  INFO ToolCall: shell_command {"command":"sed -n '1,220p' src/services/job_manager.py","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T02:03:01.557457Z  INFO ToolCall: shell_command {"command":"rg -n \"append_log|log\" src/cli/pipeline.py src/services -g\"*.py\"","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T02:03:03.941040Z  INFO ToolCall: shell_command {"command":"sed -n '1,200p' src/cli/pipeline.py","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T02:03:08.214000Z  INFO ToolCall: shell_command {"command":"sed -n '1,220p' src/services/generator.py","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T02:03:31.766232Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/services/generator.py
+@@
+ def generate_units(
+     chunks: List[str],
+     references: List[str],
+     llm_client: Optional[LLMClient] = None,
+-    print_llm_output: bool = False,
++    print_llm_output: bool = False,
++    log_callback: Optional[callable] = None,
+ ) -> List[Dict[str, Any]]:
+     units = []
+     for idx, chunk in enumerate(chunks, start=1):
+         reference = references[idx - 1]
+         if llm_client:
+             system_prompt, user_prompt = build_prompt(chunk)
+             response = llm_client.generate(system_prompt, user_prompt)
+             if print_llm_output:
+-                print(f"LLM output (chunk {idx}): {response}")
++                formatted = (
++                    json.dumps(response, ensure_ascii=False)
++                    if isinstance(response, (dict, list))
++                    else str(response)
++                )
++                message = f"LLM output (chunk {idx}): {formatted}"
++                print(message)
++                if log_callback:
++                    log_callback(message)
+             candidate = response.get("unit") or response
+*** End Patch
+2025-12-28T02:03:37.398183Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/services/generator.py
+@@
+-import json
+-from typing import List, Dict, Any, Optional
++import json
++from typing import Any, Callable, Dict, List, Optional
+@@
+-    log_callback: Optional[callable] = None,
++    log_callback: Optional[Callable[[str], None]] = None,
+*** End Patch
+2025-12-28T02:03:41.668941Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/pipeline.py
+@@
+     units = generate_units(
+         chunks,
+         references,
+         llm_client=llm_client,
+         print_llm_output=print_llm_output if print_llm_output is not None else debug_cfg.get("print_llm_output", False),
++        log_callback=log_callback,
+     )
+*** End Patch
+2025-12-28T02:03:52.352159Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/admin.py
+@@
+     <section class="grid">
+       <div class="card">
+         <h2>處理狀態</h2>
+         <p id="job-status">尚未啟動任務。</p>
+         <div class="progress-wrap" aria-label="job-progress">
+           <div class="progress-bar" id="job-progress" style="width: 0%;"></div>
+         </div>
+       </div>
+       <div class="card">
+         <h2>輸出預覽</h2>
+         <p>顯示最新任務的前 20 行輸出。</p>
+         <pre id="job-output" style="white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--panel-strong); padding: 12px; border-radius: 12px; border: 1px solid var(--line); min-height: 120px;">尚未載入。</pre>
+       </div>
++      <div class="card">
++        <h2>資訊區塊</h2>
++        <p>顯示任務執行中的詳細訊息。</p>
++        <pre id="job-log" style="white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--panel-strong); padding: 12px; border-radius: 12px; border: 1px solid var(--line); min-height: 160px;">尚未載入。</pre>
++      </div>
+     </section>
+*** End Patch
+2025-12-28T02:04:01.363255Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/admin.py
+@@
+     const pipelineForm = document.getElementById("pipeline-form");
+     const jobStatus = document.getElementById("job-status");
+     const jobProgress = document.getElementById("job-progress");
+     const jobOutput = document.getElementById("job-output");
++    const jobLog = document.getElementById("job-log");
+     let activeJobId = null;
+     let pollTimer = null;
+@@
+-        setJobStatus(`狀態：${data.status} · 進度：${data.progress}% · 步驟：${data.last_step}`, data.progress);
++        setJobStatus(`狀態：${data.status} · 進度：${data.progress}% · 步驟：${data.last_step}`, data.progress);
++        if (jobLog && Array.isArray(data.logs)) {
++          jobLog.textContent = data.logs.join("\n") || "尚未載入。";
++        }
+         if (jobOutput && data.output) {
+           jobOutput.textContent = data.output;
+         } else if (jobOutput) {
+@@
+       setJobStatus("任務啟動中…", 0);
+       if (jobOutput) {
+         jobOutput.textContent = "等待輸出...";
+       }
++      if (jobLog) {
++        jobLog.textContent = "等待訊息...";
++      }
+*** End Patch
+2025-12-28T02:04:04.686425Z  INFO ToolCall: shell_command {"command":"rg -n \"job-status|job-progress|job-output|pollJob\" -n src/cli/admin.py","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T02:04:07.301383Z  INFO ToolCall: shell_command {"command":"sed -n '380,470p' src/cli/admin.py","workdir":"/home/pigo/文件/python/PrimeArchive-120B"}
+2025-12-28T02:04:18.258234Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/admin.py
+@@
+-    const jobOutput = document.getElementById("job-output");
++    const jobOutput = document.getElementById("job-output");
++    const jobLog = document.getElementById("job-log");
+@@
+-        setJobStatus(`狀態：${{data.status}} · 進度：${{data.progress}}% · 步驟：${{data.last_step}}`, data.progress);
++        setJobStatus(`狀態：${{data.status}} · 進度：${{data.progress}}% · 步驟：${{data.last_step}}`, data.progress);
++        if (jobLog && Array.isArray(data.logs)) {{
++          jobLog.textContent = data.logs.join("\\n") || "尚未載入。";
++        }}
+         if (jobOutput && data.output) {{
+           jobOutput.textContent = data.output;
+         }} else if (jobOutput) {{
+           const outputResponse = await fetch(`/jobs/${{activeJobId}}/output`);
+           if (outputResponse.ok) {{
+             jobOutput.textContent = await outputResponse.text();
+           }}
+         }}
+-        if (data.status === "completed" || data.status === "failed") {{
++        if (data.status === "succeeded" || data.status === "failed") {{
+           if (pollTimer) {{
+             clearInterval(pollTimer);
+           }}
+         }}
+@@
+       setJobStatus("任務啟動中…", 0);
+       if (jobOutput) {{
+         jobOutput.textContent = "等待輸出...";
+       }}
++      if (jobLog) {{
++        jobLog.textContent = "等待訊息...";
++      }}
+*** End Patch
+2025-12-28T02:05:20.591085Z  INFO spawning ghost snapshot task
+2025-12-28T02:05:20.786784Z  INFO ghost snapshot blocking task finished
+2025-12-28T02:05:20.787101Z  INFO ghost commit captured: fb93d009252d967f274b632de97bea85c84c9225
+2025-12-28T02:05:20.787146Z  INFO ghost snapshot gate marked ready
+2025-12-28T02:05:32.563520Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/admin.py
+@@
+-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
++from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
+@@
+-@app.post("/validate")
+-def validate_output(
+-    validate_file: UploadFile | None = File(None),
+-) -> HTMLResponse:
++@app.post("/validate")
++def validate_output(
++    validate_file: UploadFile | None = File(None),
++) -> JSONResponse:
+     uploads_dir = pathlib.Path("data/uploads")
+     uploads_dir.mkdir(parents=True, exist_ok=True)
+     path: pathlib.Path
+     if validate_file is not None and validate_file.filename:
+         target = uploads_dir / validate_file.filename
+         content = validate_file.file.read()
+         target.write_bytes(content)
+         path = target
+     else:
+-        return HTMLResponse("<p>No validation file provided.</p>", status_code=400)
++        return JSONResponse({"error": "No validation file provided."}, status_code=400)
+     try:
+         rate = run_validation(path)
+     except Exception as exc:
+-        return HTMLResponse(f"<p>Validation failed: {exc}</p>", status_code=400)
+-    return HTMLResponse(
+-        f"<p>Validation complete. Hallucination rate: {rate}</p><p><a href='/'>Back</a></p>",
+-        status_code=200,
+-    )
++        return JSONResponse({"error": f"Validation failed: {exc}"}, status_code=400)
++    return JSONResponse(
++        {"status": "ok", "hallucination_rate": rate},
++        status_code=200,
++    )
+*** End Patch
+2025-12-28T02:05:43.113389Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/admin.py
+@@
+     const validateFileInput = document.getElementById("validate_file");
++    const validateForm = document.getElementById("validate-form");
+     const pipelineForm = document.getElementById("pipeline-form");
+     const jobStatus = document.getElementById("job-status");
+@@
+     const jobOutput = document.getElementById("job-output");
+     const jobLog = document.getElementById("job-log");
+@@
+     const setJobStatus = (text, progress) => {{
+       if (jobStatus) {{
+         jobStatus.textContent = text;
+       }}
+@@
+     }};
++
++    const appendInfo = (text) => {{
++      if (!jobLog) {{
++        return;
++      }}
++      const current = jobLog.textContent || "";
++      const next = current === "尚未載入。" || current === "等待訊息..." ? "" : `${{current}}\n`;
++      jobLog.textContent = `${{next}}${{text}}`;
++    }};
+@@
+     pipelineForm?.addEventListener("submit", async (event) => {{
+@@
+     }});
++
++    validateForm?.addEventListener("submit", async (event) => {{
++      event.preventDefault();
++      const formData = new FormData(validateForm);
++      appendInfo("驗證開始…");
++      try {{
++        const response = await fetch("/validate", {{
++          method: "POST",
++          body: formData,
++        }});
++        const data = await response.json();
++        if (!response.ok) {{
++          appendInfo(`驗證失敗：${{data.error || "未知錯誤"}}`);
++          return;
++        }}
++        appendInfo(`驗證完成。Hallucination rate: ${{data.hallucination_rate}}`);
++      }} catch (error) {{
++        appendInfo("驗證失敗，請檢查網路或伺服器狀態。");
++      }}
++    }});
+*** End Patch
+2025-12-28T02:08:01.458756Z  WARN failed to paste image: no image on clipboard: The clipboard contents were not available in the requested format or the clipboard is empty.
+2025-12-28T02:08:05.005321Z  INFO spawning ghost snapshot task
+2025-12-28T02:08:05.180235Z  INFO ghost snapshot blocking task finished
+2025-12-28T02:08:05.180534Z  INFO ghost commit captured: 9c726d327b98880596be623413caaf2ea561ee72
+2025-12-28T02:08:05.180572Z  INFO ghost snapshot gate marked ready
+2025-12-28T02:08:08.941208Z  INFO interrupt received: abort current task, if any
+2025-12-28T02:08:27.750930Z  INFO spawning ghost snapshot task
+2025-12-28T02:08:27.965920Z  INFO ghost snapshot blocking task finished
+2025-12-28T02:08:27.966275Z  INFO ghost commit captured: 8d8b1bb537d5460fd71cbba22a8cf805b7a777a5
+2025-12-28T02:08:27.966363Z  INFO ghost snapshot gate marked ready
+2025-12-28T02:08:29.887960Z  WARN failed to paste image: no image on clipboard: The clipboard contents were not available in the requested format or the clipboard is empty.
+2025-12-28T02:08:33.068786Z  INFO interrupt received: abort current task, if any
+2025-12-28T02:08:55.352007Z  INFO spawning ghost snapshot task
+2025-12-28T02:08:55.537446Z  INFO ghost snapshot blocking task finished
+2025-12-28T02:08:55.537809Z  INFO ghost commit captured: 6ec7c005ea44df6dc68fa725331d3f69bdf125d6
+2025-12-28T02:08:55.537894Z  INFO ghost snapshot gate marked ready
+2025-12-28T02:09:03.035884Z  INFO ToolCall: apply_patch *** Begin Patch
+*** Update File: src/cli/admin.py
+@@
+       <div class="card">
+         <h2>資訊區塊</h2>
+         <p>顯示任務執行中的詳細訊息。</p>
+-        <pre id="job-log" style="white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--panel-strong); padding: 12px; border-radius: 12px; border: 1px solid var(--line); min-height: 160px;">尚未載入。</pre>
++        <pre id="job-log" style="white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--panel-strong); padding: 12px; border-radius: 12px; border: 1px solid var(--line); min-height: 160px; max-height: 280px; overflow-y: auto;">尚未載入。</pre>
+       </div>
+*** End Patch

@@ -365,6 +365,11 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
         <p>顯示最新任務的前 20 行輸出。</p>
         <pre id="job-output" style="white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--panel-strong); padding: 12px; border-radius: 12px; border: 1px solid var(--line); min-height: 120px;">尚未載入。</pre>
       </div>
+      <div class="card">
+        <h2>資訊區塊</h2>
+        <p>顯示任務執行中的詳細訊息。</p>
+        <pre id="job-log" style="white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--panel-strong); padding: 12px; border-radius: 12px; border: 1px solid var(--line); min-height: 160px; max-height: 280px; overflow-y: auto;">尚未載入。</pre>
+      </div>
     </section>
 
     <section class="table-wrap">
@@ -382,10 +387,12 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
     const uploadInput = document.getElementById("upload_file");
     const pathInput = document.getElementById("input_path");
     const validateFileInput = document.getElementById("validate_file");
+    const validateForm = document.getElementById("validate-form");
     const pipelineForm = document.getElementById("pipeline-form");
     const jobStatus = document.getElementById("job-status");
     const jobProgress = document.getElementById("job-progress");
     const jobOutput = document.getElementById("job-output");
+    const jobLog = document.getElementById("job-log");
     let activeJobId = null;
     let pollTimer = null;
 
@@ -396,6 +403,15 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
       if (jobProgress && typeof progress === "number") {{
         jobProgress.style.width = `${{Math.max(0, Math.min(100, progress))}}%`;
       }}
+    }};
+
+    const appendInfo = (text) => {{
+      if (!jobLog) {{
+        return;
+      }}
+      const current = jobLog.textContent || "";
+      const next = current === "尚未載入。" || current === "等待訊息..." ? "" : `${{current}}\n`;
+      jobLog.textContent = `${{next}}${{text}}`;
     }};
 
     const pollJob = async () => {{
@@ -409,6 +425,9 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
         }}
         const data = await response.json();
         setJobStatus(`狀態：${{data.status}} · 進度：${{data.progress}}% · 步驟：${{data.last_step}}`, data.progress);
+        if (jobLog && Array.isArray(data.logs)) {{
+          jobLog.textContent = data.logs.join("\\n") || "尚未載入。";
+        }}
         if (jobOutput && data.output) {{
           jobOutput.textContent = data.output;
         }} else if (jobOutput) {{
@@ -417,7 +436,7 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
             jobOutput.textContent = await outputResponse.text();
           }}
         }}
-        if (data.status === "completed" || data.status === "failed") {{
+        if (data.status === "succeeded" || data.status === "failed") {{
           if (pollTimer) {{
             clearInterval(pollTimer);
           }}
@@ -441,6 +460,9 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
       if (jobOutput) {{
         jobOutput.textContent = "等待輸出...";
       }}
+      if (jobLog) {{
+        jobLog.textContent = "等待訊息...";
+      }}
       try {{
         const response = await fetch("/run", {{
           method: "POST",
@@ -456,6 +478,26 @@ def _render_home(jobs: Dict[str, str], status: Dict[str, str], models: list[str]
         startPolling();
       }} catch (error) {{
         setJobStatus("啟動失敗，請檢查網路或伺服器狀態。", 0);
+      }}
+    }});
+
+    validateForm?.addEventListener("submit", async (event) => {{
+      event.preventDefault();
+      const formData = new FormData(validateForm);
+      appendInfo("驗證開始…");
+      try {{
+        const response = await fetch("/validate", {{
+          method: "POST",
+          body: formData,
+        }});
+        const data = await response.json();
+        if (!response.ok) {{
+          appendInfo(`驗證失敗：${{data.error || "未知錯誤"}}`);
+          return;
+        }}
+        appendInfo(`驗證完成。Hallucination rate: ${{data.hallucination_rate}}`);
+      }} catch (error) {{
+        appendInfo("驗證失敗，請檢查網路或伺服器狀態。");
       }}
     }});
 
@@ -612,7 +654,7 @@ def download_output(job_id: str) -> FileResponse:
 @app.post("/validate")
 def validate_output(
     validate_file: UploadFile | None = File(None),
-) -> HTMLResponse:
+) -> JSONResponse:
     uploads_dir = pathlib.Path("data/uploads")
     uploads_dir.mkdir(parents=True, exist_ok=True)
     path: pathlib.Path
@@ -622,13 +664,13 @@ def validate_output(
         target.write_bytes(content)
         path = target
     else:
-        return HTMLResponse("<p>No validation file provided.</p>", status_code=400)
+        return JSONResponse({"error": "No validation file provided."}, status_code=400)
     try:
         rate = run_validation(path)
     except Exception as exc:
-        return HTMLResponse(f"<p>Validation failed: {exc}</p>", status_code=400)
-    return HTMLResponse(
-        f"<p>Validation complete. Hallucination rate: {rate}</p><p><a href='/'>Back</a></p>",
+        return JSONResponse({"error": f"Validation failed: {exc}"}, status_code=400)
+    return JSONResponse(
+        {"status": "ok", "hallucination_rate": rate},
         status_code=200,
     )
 

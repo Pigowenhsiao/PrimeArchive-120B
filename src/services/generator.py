@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import List, Dict, Any, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from src.services.llm_client import LLMClient
 from src.services.prompting import build_prompt
@@ -66,6 +66,7 @@ def generate_units(
     references: List[str],
     llm_client: Optional[LLMClient] = None,
     print_llm_output: bool = False,
+    log_callback: Optional[Callable[[str], None]] = None,
 ) -> List[Dict[str, Any]]:
     units = []
     for idx, chunk in enumerate(chunks, start=1):
@@ -74,7 +75,15 @@ def generate_units(
             system_prompt, user_prompt = build_prompt(chunk)
             response = llm_client.generate(system_prompt, user_prompt)
             if print_llm_output:
-                print(f"LLM output (chunk {idx}): {response}")
+                formatted = (
+                    json.dumps(response, ensure_ascii=False)
+                    if isinstance(response, (dict, list))
+                    else str(response)
+                )
+                message = f"LLM output (chunk {idx}): {formatted}"
+                print(message)
+                if log_callback:
+                    log_callback(message)
             candidate = response.get("unit") or response
             if isinstance(candidate, list) and candidate:
                 candidate = candidate[0]

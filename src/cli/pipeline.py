@@ -102,6 +102,7 @@ def run_pipeline(
         references,
         llm_client=llm_client,
         print_llm_output=print_llm_output if print_llm_output is not None else debug_cfg.get("print_llm_output", False),
+        log_callback=log_callback,
     )
     safe_log("pipeline.generated", {"units": len(units)})
     _emit(f"Generated {len(units)} units", 70, log_callback, progress_callback)
